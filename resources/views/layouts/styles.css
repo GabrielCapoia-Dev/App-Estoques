@@ -1,0 +1,75 @@
+/* Sidebar fixada e conteúdo */
+.sidebar {
+    height: 100vh;
+    position: fixed;
+    background-color: #f8f9fa;
+    border-right: 1px solid rgba(0, 0, 0, 0.12);
+    width: 240px;
+    transition: transform 0.3s ease;
+    /* Adicionando transição suave */
+}
+
+.content {
+    margin-left: 240px;
+    padding: 20px;
+    background-color: #f5f5f5;
+    min-height: 90vh;
+    width: calc(100% - 240px);
+    transition: margin-left 0.3s ease, width 0.3s ease;
+    /* Adicionando transição suave */
+}
+
+/* Quando o menu estiver colapsado no mobile */
+@media (max-width: 991px) {
+    .sidebar {
+        width: 0;
+        transform: translateX(-100%);
+        /* Esconde a sidebar */
+        background-color: rgba(0, 0, 0, 0.8);
+        /* Fundo escuro quando o menu aparece */
+    }
+
+    .content {
+        margin-left: 0;
+        width: 100%;
+        /* Ocupa toda a largura */
+    }
+
+    /* Ajustar o botão de hambúrguer para o conteúdo */
+    .navbar-toggler {
+        z-index: 1000;
+        /* Coloca o botão no topo */
+    }
+
+    /* Visibilidade da sidebar quando o menu está aberto */
+    .navbar-collapse.collapse.show+.sidebar {
+        transform: translateX(0);
+        /* Aparece a sidebar */
+        background-color: rgba(0, 0, 0, 0.8);
+        /* Fundo para destacar o menu */
+    }
+
+    /* Melhorando o conteúdo quando o menu está ativo */
+    .navbar-collapse.show {
+        background-color: rgba(0, 0, 0, 0.5);
+        /* Fundo para o conteúdo de navegação */
+    }
+}
+
+/* Melhorando o comportamento quando a sidebar estiver visível */
+@media (min-width: 992px) {
+    .content {
+        margin-left: 240px;
+        width: calc(100% - 240px);
+    }
+}
+
+.status[data-status="Inativo"] {
+    color: red;
+    font-weight: bold;
+}
+
+.status[data-status="Ativo"] {
+    color: green;
+    font-weight: bold;
+}
