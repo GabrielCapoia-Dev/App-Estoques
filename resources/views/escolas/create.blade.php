@@ -74,25 +74,6 @@
             <input type="text" class="form-control" id="complemento" name="complemento">
         </div>
 
-        {{-- Estoque --}}
-        <h3>Estoque</h3>
-        <div class="mb-3">
-            <label for="nome_estoque" class="form-label">Nome do Estoque</label>
-            <input type="text" class="form-control" id="nome_estoque" name="nome_estoque" required>
-        </div>
-        <div class="mb-3">
-            <label for="status_estoque" class="form-label">Status</label>
-            <select class="form-control" id="status_estoque" name="status_estoque" required>
-                <option value="Ativo">Ativo</option>
-                <option value="Inativo">Inativo</option>
-            </select>
-        </div>
-        <div class="mb-3">
-            <label for="descricao_estoque" class="form-label">Descrição do Estoque</label>
-            <input type="text" class="form-control" id="descricao_estoque" name="descricao_estoque" required>
-        </div>
-
-
         <button type="submit" class="btn btn-primary">Cadastrar Escola</button>
     </form>
 

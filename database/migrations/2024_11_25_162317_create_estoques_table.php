@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('estoques', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('id_local')->constrained('locals')->onDelete('cascade');
             $table->string('nome_estoque');
             $table->string('status_estoque');
             $table->string('descricao_estoque');

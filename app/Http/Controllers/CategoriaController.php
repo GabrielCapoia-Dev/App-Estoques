@@ -15,19 +15,17 @@ class CategoriaController extends Controller
     {
         $categorias = Categoria::all();
 
-        if (!$categorias) {
-            return response()->json([
-                'error' => true,
-                'message' => 'Nenhuma categoria encontrada.'
-            ], 404);
-        }
-
-        return response()->json([
-            'error' => false,
-            'message' => 'Categorias encontradas.',
-            'categorias' => $categorias
-        ], 200);
+        return view('categorias.index', compact('categorias'));
     }
+
+    /**
+     * Retornar a view com o formulário de criação
+     */
+    public function create()
+    {
+        return view('categorias.create');
+    }
+
 
     /**
      * Criar uma caregoria especifica
@@ -57,21 +55,14 @@ class CategoriaController extends Controller
         );
 
         if ($validator->fails()) {
-            return response()->json([
-                'error' => true,
-                'message' => 'Dados inválidos.',
-                'errors' => $validator->errors()
-            ], 422);
+            return redirect()->route('categorias.create')
+                ->withErrors($validator)
+                ->withInput();
         }
 
+        Categoria::create($request->all());
 
-        $categoria = Categoria::create([$request->all()]);
-
-        return response()->json([
-            'error' => false,
-            'message' => 'Categoria criada com sucesso.',
-            'categoria' => $categoria
-        ], 200);
+        return redirect()->route('categorias.index')->with('success', 'Categoria criada com sucesso!');
     }
 
     /**
@@ -82,18 +73,26 @@ class CategoriaController extends Controller
         $categoria = Categoria::find($id);
 
         if (!$categoria) {
-            return response()->json([
-                'error' => true,
-                'message' => 'Categoria nao encontrada.'
-            ], 404);
+            return redirect()->route('categorias.index')->with('error', 'Categoria não encontrada!');
         }
 
-        return response()->json([
-            'error' => false,
-            'message' => 'Categoria encontrada.',
-            'categoria' => $categoria
-        ], 200);
+        return view('categorias.show', compact('categoria'));
     }
+
+    /**
+     * Retornar a view de edição
+     */
+    public function edit($id)
+    {
+        $categoria = Categoria::find($id);
+
+        if (!$categoria) {
+            return redirect()->route('categorias.index')->with('error', 'Categoria não encontrada!');
+        }
+
+        return view('categorias.edit', compact('categoria'));
+    }
+
 
     /**
      * Atualiza informacoes da categoria
@@ -104,10 +103,7 @@ class CategoriaController extends Controller
         $categoria = Categoria::find($id);
 
         if (!$categoria) {
-            return response()->json([
-                'error' => true,
-                'message' => 'Categoria nao encontrada.'
-            ], 404);
+            return redirect()->route('categorias.index')->with('error', 'Categoria não encontrada!');
         }
 
         $validator = Validator::make(
@@ -133,111 +129,16 @@ class CategoriaController extends Controller
         );
 
         if ($validator->fails()) {
-            return response()->json([
-                'error' => true,
-                'message' => 'Dados inválidos.',
-                'errors' => $validator->errors()
-            ], 422);
+            // Se a validação falhar, redireciona com erros
+            return redirect()->route('categorias.edit', $categoria->id)
+                ->withErrors($validator)
+                ->withInput();
         }
 
-
+        // Atualiza a categoria com os novos dados
         $categoria->update($request->all());
 
-        return response()->json([
-            'error' => false,
-            'message' => 'Categoria atualizada com sucesso.',
-            'categoria' => $categoria
-        ], 200);
-    }
-
-
-    /**
-     * Desativa uma categoria especifica e os produtos que a possuem
-     */
-    public function desativarCategoria($id)
-    {
-        $categoria = Categoria::find($id);
-
-        if (!$categoria) {
-            return response()->json([
-                'error' => true,
-                'message' => 'Categoria nao encontrada.'
-            ], 404);
-        }
-
-        $categoria->status_categoria = 'Inativo';
-        $categoria->save();
-
-        $produtos = $categoria->produtos()->get();
-
-        foreach ($produtos as $produto) {
-            $produto->status_produto = 'Inativo';
-            $produto->save();
-        }
-
-        return response()->json([
-            'error' => false,
-            'message' => 'Categoria desativada com sucesso.',
-            'categoria' => $categoria
-        ], 200);
-    }
-
-    /**
-     * Ativa uma categoria especifica e os produtos que a possuem
-     */
-    public function ativarCategoria($id)
-    {
-        $categoria = Categoria::find($id);
-
-        if (!$categoria) {
-            return response()->json([
-                'error' => true,
-                'message' => 'Categoria nao encontrada.'
-            ], 404);
-        }
-
-        $categoria->status_categoria = 'Ativo';
-        $categoria->save();
-
-        $produtos = $categoria->produtos()->get();
-
-        foreach ($produtos as $produto) {
-            $produto->status_produto = 'Ativo';
-            $produto->save();
-        }
-
-        return response()->json([
-            'error' => false,
-            'message' => 'Categoria ativada com sucesso.',
-            'categoria' => $categoria
-        ], 200);
-    }
-
-    /**
-     * Listar categorias ativas
-     */
-    public function visualizarCategoriasAtivas()
-    {
-        $categorias = Categoria::where('status_categoria', 'Ativo')->get();
-
-        return response()->json([
-            'error' => false,
-            'message' => 'Categorias encontradas.',
-            'categorias' => $categorias
-        ], 200);
-    }
-
-    /**
-     * Listar categorias inativas
-     */
-    public function visualizarCategoriasInativas()
-    {
-        $categorias = Categoria::where('status_categoria', 'Inativo')->get();
-
-        return response()->json([
-            'error' => false,
-            'message' => 'Categorias encontradas.',
-            'categorias' => $categorias
-        ], 200);
+        // Redireciona para a lista de categorias com sucesso
+        return redirect()->route('categorias.index')->with('success', 'Categoria atualizada com sucesso!');
     }
 }

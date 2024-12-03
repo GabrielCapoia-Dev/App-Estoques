@@ -24,7 +24,7 @@ class EnderecoController extends Controller
                 'bairro' => 'required|string|max:50',
                 'cidade' => 'required|string|max:50',
                 'estado' => 'required|string|max:16',
-                'complemento' => 'required|string|max:150',
+                'complemento' => 'nullable|string|max:150',
                 'numero' => 'required|string|max:10',
             ],
             [
@@ -60,25 +60,6 @@ class EnderecoController extends Controller
             'complemento' => $request->complemento,
             'numero' => $request->numero,
         ]);
-    }
-
-    /**
-     * Retorna o endereço de um local especifico
-     */
-    public static function show($id_local)
-    {
-        $local = Local::find($id_local);
-
-        if (!$local) {
-            return response()->json([
-                'error' => true,
-                'message' => 'Local não encontrado.'
-            ], 404);
-        }
-
-        $enderecos = $local->endereco()->get();
-
-        return  $enderecos;
     }
 
     /**

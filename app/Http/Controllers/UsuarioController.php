@@ -14,11 +14,10 @@ class UsuarioController extends Controller
      */
     public function index(Request $request)
     {
-        // Verificando se o usuário clicou no botão para visualizar os inativos
         if ($request->has('mostrar_inativos') && $request->mostrar_inativos == 'true') {
-            $usuarios = Usuario::all(); // Pegue todos os usuários, ativos e inativos
+            $usuarios = Usuario::where('status_usuario', 'Inativo')->get(); 
         } else {
-            $usuarios = Usuario::where('status_usuario', 'Ativo')->get(); // Apenas ativos
+            $usuarios = Usuario::where('status_usuario', 'Ativo')->get(); 
         }
 
         return view('usuarios.index', compact('usuarios'));
@@ -79,7 +78,6 @@ class UsuarioController extends Controller
         );
 
         if ($validator->fails()) {
-            // Retorna para a view com os erros de validação
             return view('usuario.create', [
                 'error' => true,
                 'message' => 'Erro ao cadastrar usuário.',
@@ -87,7 +85,6 @@ class UsuarioController extends Controller
             ]);
         }
 
-        // Criação do novo usuário
         $usuario = Usuario::create([
             'nome_usuario' => $request->nome_usuario,
             'email_usuario' => $request->email_usuario,
@@ -96,7 +93,6 @@ class UsuarioController extends Controller
             'status_usuario' => 'Ativo'
         ]);
 
-        // Redireciona para a página de listagem de usuários, com a mensagem de sucesso
         return redirect()->route('usuarios.index')->with('success', 'Usuário cadastrado com sucesso.');
     }
 
@@ -107,21 +103,20 @@ class UsuarioController extends Controller
     public function show($id)
     {
         $usuario = Usuario::find($id);
+        $locais = $usuario->locais()->get();
 
-        if (!$usuario) {
+        if (!$usuario || !$locais) {
             return view('usuarios.show', ['message' => 'Usuário não encontrado.']);
         }
 
-        return view('usuarios.show', ['usuario' => $usuario]);
+        return view('usuarios.show', ['usuario' => $usuario, 'locais' => $locais]);
     }
 
 
     public function edit($id)
     {
-        // Busca o usuário pelo ID
         $usuario = Usuario::findOrFail($id);
 
-        // Retorna a view com os dados do usuário
         return view('usuarios.edit', compact('usuario'));
     }
 
@@ -215,99 +210,4 @@ class UsuarioController extends Controller
         return redirect()->route('usuarios.index')->with('success', 'Usuário editado com sucesso!');
     }
 
-
-    /**
-     * Desabilita o usuário
-     */
-    public function desativarUsuario($id)
-    {
-        $usuario = Usuario::findOrFail($id);
-        $usuario->status_usuario = 'Inativo';
-        $usuario->save();
-
-        return response()->json(['success' => true]);
-    }
-
-    /**
-     * Habilita o usuário
-     */
-    public function ativarUsuario($id)
-    {
-        $usuario = Usuario::findOrFail($id);
-        $usuario->status_usuario = 'Ativo';
-        $usuario->save();
-
-        return response()->json(['success' => true]);
-    }
-
-    /**
-     * Atualiza o status do usuário (Ativo/Inativo).
-     */
-    public function atualizarStatus(Request $request, $id)
-    {
-        $usuario = Usuario::find($id);
-
-        if (!$usuario) {
-            return response()->json([
-                'error' => true,
-                'message' => 'Usuário não encontrado.'
-            ], 404);
-        }
-
-        // Atualiza o status
-        $usuario->status_usuario = $request->status_usuario;
-        $usuario->save();
-
-        return response()->json([
-            'error' => false,
-            'message' => 'Status atualizado com sucesso.',
-            'usuario' => $usuario
-        ], 200);
-    }
-
-
-    /** 
-     * Lista todos os usuarios ativos por permissao
-     */
-    public function visualizarUsuariosPorPermissao($permissao)
-    {
-
-        $usuarios = Usuario::where('status_usuario', 'Ativo')->where('permissao', $permissao)->get();
-
-        if ($usuarios->isEmpty()) {
-            return view('usuarios.permissao', ['message' => 'Nenhum usuário encontrado.']);
-        }
-
-        return view('usuarios.permissao', ['usuarios' => $usuarios, 'permissao' => $permissao]);
-    }
-
-
-    /** 
-     * Visualizar todos os usuarios ativos
-     */
-    public function visualizarUsuariosAtivos()
-    {
-        $usuarios = Usuario::where('status_usuario', 'Ativo')->where('permissao', '!=', 'Administrador')->get();
-
-        if ($usuarios->isEmpty()) {
-            return view('usuarios.ativos', ['message' => 'Nenhum usuário encontrado.']);
-        }
-
-        return view('usuarios.ativos', ['usuarios' => $usuarios]);
-    }
-
-
-    /**
-     * Visualizar todos os usuarios inativos
-     */
-    public function visualizarUsuariosInativos()
-    {
-        $usuarios = Usuario::where('status_usuario', 'Inativo')->where('permissao', '!=', 'Administrador')->get();
-
-        if ($usuarios->isEmpty()) {
-            return view('usuarios.inativos', ['message' => 'Nenhum usuário encontrado.']);
-        }
-
-        return view('usuarios.inativos', ['usuarios' => $usuarios]);
-    }
 }

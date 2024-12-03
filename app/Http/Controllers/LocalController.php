@@ -18,13 +18,6 @@ class LocalController extends Controller
     {
         $escola = Local::all();
 
-        if (!$escola) {
-            return response()->json([
-                'error' => true,
-                'message' => 'Nenhum local encontrado.'
-            ], 404);
-        }
-
         return view('escolas.index', ['escolas' => $escola]);
     }
 
@@ -44,14 +37,7 @@ class LocalController extends Controller
             return $endereco;  // Se a resposta for um erro JSON, retorne imediatamente
         }
 
-        // Cria o estoque
-        $estoque = EstoqueController::store($request);
-        if ($estoque instanceof \Illuminate\Http\JsonResponse) {
-            return $estoque;  // Se a resposta for um erro JSON, retorne imediatamente
-        }
-
-
-        // Validar os dados da Escola
+        // Validar os dados do Local (Escola)
         $validator = Validator::make(
             $request->all(),
             [
@@ -79,18 +65,13 @@ class LocalController extends Controller
             ], 422);
         }
 
-        $escola = Local::create([
+        $local = Local::create([
             'nome_local' => $request->nome_local,
             'status_local' => $request->status_local,
             'id_endereco' => $endereco->id,
-            'id_estoque' => $estoque->id,
         ]);
 
-        return view('escolas.index', [
-            'escolas' => $escola,
-            'endereco' => $endereco,
-            'estoque' => $estoque,
-        ]);
+        return redirect()->route('escolas.index')->with('success', 'Escola cadastrada com sucesso!');
     }
 
     /**
@@ -149,6 +130,7 @@ class LocalController extends Controller
         return redirect()->route('escolas.index')->with('success', 'Local e endereço atualizados com sucesso.');
     }
 
+
     /**
      * Exibe a lista de funcionários vinculados a uma escola.
      */
@@ -194,16 +176,6 @@ class LocalController extends Controller
         return redirect()->route('escolas.show', $local->id)->with('success', 'Funcionário desvinculado com sucesso!');
     }
 
-
-    public function listarFuncionarios($id)
-    {
-        // Encontra o local com os usuários associados
-        $local = Local::with('usuarios')->findOrFail($id);
-
-        // Passa o local e seus funcionários para a view
-        return view('escolas.show', compact('local'));
-    }
-
     public function edit($id)
     {
         // Busca o local e o endereço relacionado pelo ID
@@ -211,99 +183,5 @@ class LocalController extends Controller
 
         // Retorna a view com os dados do local e endereço
         return view('escolas.edit', compact('local'));
-    }
-
-    /**
-     * Desativa o local
-     */
-    public function desativarLocal($id)
-    {
-        $local = Local::find($id);
-
-        if (!$local) {
-            return response()->json([
-                'error' => true,
-                'message' => 'Local não encontrado.'
-            ], 404);
-        }
-
-        $local->status_local = 'Inativo';
-        $local->save();
-        return response()->json([
-            'error' => false,
-            'message' => 'Local desativado com sucesso.',
-            'local' => $local
-        ], 200);
-    }
-
-
-    /**
-     * Ativa o local
-     */
-    public function ativarLocal($id)
-    {
-        $local = Local::find($id);
-
-        if (!$local) {
-            return response()->json([
-                'error' => true,
-                'message' => 'Local não encontrado.'
-            ], 404);
-        }
-
-        $local->status_local = 'Ativo';
-        $local->save();
-        return response()->json([
-            'error' => false,
-            'message' => 'Local ativado com sucesso.',
-            'local' => $local
-        ], 200);
-    }
-
-
-    /**
-     * Retorna os estoques ativos do local
-     */
-    public function visualizarEstoquesAtivosDoLocal($id)
-    {
-        $local = Local::find($id);
-
-        if (!$local) {
-            return response()->json([
-                'error' => true,
-                'message' => 'Local não encontrado.'
-            ], 404);
-        }
-
-        $estoques = $local->estoques()->where('status', 'Ativo')->get();
-
-        return response()->json([
-            'error' => false,
-            'message' => 'Estoques ativos do local.',
-            'estoques' => $estoques
-        ], 200);
-    }
-
-    /**
-     * Visualizar estoques inativos do local
-     */
-    public function visualizarEstoquesInativosDoLocal($id)
-    {
-        $local = Local::find($id);
-
-        if (!$local) {
-            return response()->json([
-                'error' => true,
-                'message' => 'Local não encontrado.'
-            ], 404);
-        }
-
-        $estoques = $local->estoques()->where('status', 'Inativo')->get();
-
-        return response()->json([
-            'error' => false,
-            'message' => 'Estoques inativos do local.',
-            'estoques' => $estoques
-        ], 200);
     }
 }

@@ -3,11 +3,12 @@
 @section('content')
     <h1>Criar Estoque para {{ $escola->nome_local }}</h1>
 
-    <form action="{{ route('estoques.store', $escola->id) }}" method="POST">
+    <form action="{{ route('estoques.criarEstoque', $escola->id) }}" method="POST">
         @csrf
         <div class="form-group">
             <label for="nome_estoque">Nome do Estoque:</label>
-            <input type="text" name="nome_estoque" id="nome_estoque" class="form-control" value="{{ old('nome_estoque') }}" required>
+            <input type="text" name="nome_estoque" id="nome_estoque" class="form-control" value="{{ old('nome_estoque') }}"
+                required>
             @error('nome_estoque')
                 <small class="text-danger">{{ $message }}</small>
             @enderror
@@ -20,8 +21,9 @@
                 <small class="text-danger">{{ $message }}</small>
             @enderror
         </div>
-
+        <br>
         <button type="submit" class="btn btn-success">Salvar Estoque</button>
-        <a href="{{ route('escolas.estoques', $escola->id) }}" class="btn btn-secondary">Voltar</a>
+        <a href="{{ route('estoques.index', $escola->id) }}" class="btn btn-secondary">Voltar</a>
+
     </form>
 @endsection

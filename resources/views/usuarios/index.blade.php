@@ -12,7 +12,7 @@
         @endif
 
         {{-- Mostrar botão de "Ver Ativos" apenas se o usuário estiver vendo os inativos --}}
-        @if (count($usuarios) > 0 && $usuarios->first()->status_usuario === 'Inativo')
+        @if ((count($usuarios) == 0 ) || (count($usuarios) > 0 && $usuarios->first()->status_usuario === 'Inativo'))
             <a href="{{ route('usuarios.index') }}" class="btn btn-secondary">Ver Ativos</a>
         @endif
     </div>

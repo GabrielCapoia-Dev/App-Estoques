@@ -11,7 +11,6 @@ class Local extends Model
 
     protected $fillable = [
         'id_endereco',
-        'id_estoque',
         'nome_local',
         'status_local',
     ];
@@ -21,13 +20,13 @@ class Local extends Model
         return $this->belongsTo(Endereco::class, 'id_endereco');
     }
 
-    public function estoques()
-    {
-        return $this->hasMany(Estoque::class);
-    }
-
     public function usuarios()
     {
         return $this->belongsToMany(Usuario::class, 'usuarios_locals');
+    }
+
+    public function estoques()
+    {
+        return $this->hasMany(Estoque::class, 'id_local');
     }
 }

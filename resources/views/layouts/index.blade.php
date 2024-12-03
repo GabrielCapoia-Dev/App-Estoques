@@ -70,22 +70,22 @@
             <a class="navbar-brand d-block mb-4 text-center" href="{{ url('/') }}">Dashboard</a>
             <ul class="navbar-nav flex-column">
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url('/escolas') }}"><i class="fas fa-school"></i> Escolas</a>
+                    <a class="nav-link" href="{{ url('/escolas/listar') }}"><i class="fas fa-school"></i> Escolas</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url('/categorias') }}"><i class="fas fa-th-list"></i> Categorias</a>
+                    <a class="nav-link" href="{{ url('/categorias/listar') }}"><i class="fas fa-th-list"></i> Categorias</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url('/produtos') }}"><i class="fas fa-cogs"></i> Produtos</a>
+                    <a class="nav-link" href="{{ url('/produtos/listar') }}"><i class="fas fa-cogs"></i> Produtos</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url('/baixas') }}"><i class="fas fa-arrow-down"></i> Baixas</a>
+                    <a class="nav-link" href="{{ url('/baixas/listar') }}"><i class="fas fa-arrow-down"></i> Baixas</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url('/relatorios') }}"><i class="fas fa-chart-line"></i> Relatórios</a>
+                    <a class="nav-link" href="{{ url('/relatorios/listar') }}"><i class="fas fa-chart-line"></i> Relatórios</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url('/usuarios') }}"><i class="fas fa-users"></i> Usuários</a>
+                    <a class="nav-link" href="{{ url('/usuarios/listar') }}"><i class="fas fa-users"></i> Usuários</a>
                 </li>
             </ul>
         </div>
@@ -102,7 +102,7 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url('/escolas') }}"><i class="fas fa-school"></i> Escolas</a>
+                        <a class="nav-link" href="{{ url('/escolas/listar') }}"><i class="fas fa-school"></i> Escolas</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url('/categorias') }}"><i class="fas fa-th-list"></i>
@@ -119,7 +119,7 @@
                             Relatórios</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url('/usuarios') }}"><i class="fas fa-users"></i> Usuários</a>
+                        <a class="nav-link" href="{{ url('/usuarios/listar') }}"><i class="fas fa-users"></i> Usuários</a>
                     </li>
                 </ul>
             </div>

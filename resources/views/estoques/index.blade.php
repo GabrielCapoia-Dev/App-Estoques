@@ -1,7 +1,7 @@
 @extends('layouts.index')
 
 @section('content')
-    <h1>Estoques da Escola: {{ $escola->nome_local }}</h1>
+    <h1 class="h2">Estoques da Escola: {{ $escola->nome_local }}</h1>
 
     <div class="mb-3">
         <a href="{{ route('escolas.index') }}" class="btn btn-secondary">Voltar para a lista de escolas</a>
@@ -19,6 +19,7 @@
                 <th>Ações</th>
             </tr>
         </thead>
+
         <tbody>
             @foreach ($estoques as $estoque)
                 <tr>
@@ -27,14 +28,12 @@
                     <td>{{ $estoque->status_estoque }}</td>
                     <td>{{ $estoque->descricao_estoque }}</td>
                     <td>
-                        <a href="{{ route('estoques.show', $estoque->id) }}" class="btn btn-info btn-sm">Ver</a>
-                        <a href="{{ route('estoques.edit', $estoque->id) }}" class="btn btn-warning btn-sm">Editar</a>
-                        <form action="{{ route('estoques.destroy', $estoque->id) }}" method="POST" class="d-inline">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Deseja realmente excluir este estoque?')">Excluir</button>
-                        </form>
+                        <a href="{{ route('estoques.show', ['escola' => $escola->id, 'estoque' => $estoque->id]) }}"
+                            class="btn btn-info btn-sm">Ver</a>
+                        <a href="{{ route('estoques.edit', ['escola' => $escola->id, 'estoque' => $estoque->id]) }}"
+                            class="btn btn-warning btn-sm">Editar</a>
                     </td>
+
                 </tr>
             @endforeach
         </tbody>

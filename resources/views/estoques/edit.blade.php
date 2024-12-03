@@ -3,13 +3,15 @@
 @section('content')
     <h1>Editar Estoque: {{ $estoque->nome_estoque }}</h1>
 
-    <form action="{{ route('estoques.update', $estoque->id) }}" method="POST">
+    <form action="{{ route('estoques.update', ['escola' => $estoque->local->id, 'estoque' => $estoque->id]) }}"
+        method="POST">
         @csrf
         @method('PUT')
-        
+
         <div class="form-group">
             <label for="nome_estoque">Nome do Estoque:</label>
-            <input type="text" name="nome_estoque" id="nome_estoque" class="form-control" value="{{ old('nome_estoque', $estoque->nome_estoque) }}" required>
+            <input type="text" name="nome_estoque" id="nome_estoque" class="form-control"
+                value="{{ old('nome_estoque', $estoque->nome_estoque) }}" required>
             @error('nome_estoque')
                 <small class="text-danger">{{ $message }}</small>
             @enderror
@@ -33,8 +35,8 @@
                 <small class="text-danger">{{ $message }}</small>
             @enderror
         </div>
-
+        <br>
         <button type="submit" class="btn btn-warning">Atualizar Estoque</button>
-        <a href="{{ route('escolas.estoques', $estoque->escola_id) }}" class="btn btn-secondary">Voltar</a>
+        <a href="{{ route('estoques.index', $estoque->local->id) }}" class="btn btn-secondary">Voltar</a>
     </form>
 @endsection

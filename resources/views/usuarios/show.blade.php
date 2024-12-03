@@ -1,7 +1,7 @@
 @extends('layouts.index')
 
 @section('content')
-    <h1>Detalhes do Usuário</h1>
+    <h1 class="h2">Detalhes do Usuário</h1>
 
     <table class="table table-bordered">
         <tr>
@@ -21,6 +21,14 @@
             <td>{{ $usuario->status_usuario }}</td>
         </tr>
     </table>
+    <h2>Escolas</h2>
+
+    <ul>
+        @foreach ($locais as $local)
+            <li>{{ $local->nome_local }}</li>
+        @endforeach
+    </ul>
 
     <a href="{{ route('usuarios.edit', $usuario->id) }}" class="btn btn-warning">Editar</a>
+    <a href="{{ route('usuarios.index', $usuario->id) }}" class="btn btn-info">Voltar</a>
 @endsection

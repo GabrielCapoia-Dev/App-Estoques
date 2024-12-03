@@ -31,7 +31,7 @@
                         <a href="{{ route('escolas.edit', $escola->id) }}" class="btn btn-warning btn-sm">Editar</a>
                         
                         <!-- Link para listar estoques da escola -->
-                        <a href="{{ route('escolas.estoques', $escola->id) }}" class="btn btn-success btn-sm">Estoques</a>
+                        <a href="{{ route('estoques.index', $escola->id) }}" class="btn btn-success btn-sm">Estoques</a>
                     </td>
                 </tr>
             @endforeach
