@@ -57,9 +57,6 @@
 </div>
 
 
-
-
-
 @section('content')
     <h1>Detalhes do Estoque: {{ $estoque->nome_estoque }}</h1>
 

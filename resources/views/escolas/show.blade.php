@@ -21,7 +21,9 @@
                 <!-- Select do Funcionário -->
                 <select class="form-control me-2" id="usuario_id" name="usuario_id" required>
                     @foreach ($usuarios as $usuario)
-                        <option value="{{ $usuario->id }}">{{ $usuario->nome_usuario }}</option>
+                        @if ($usuario->status_usuario != 'Inativo')
+                            <option value="{{ $usuario->id }}">{{ $usuario->nome_usuario }}</option>
+                        @endif
                     @endforeach
                 </select>
 
@@ -61,14 +63,16 @@
                     <td>{{ $usuario->status_usuario }}</td>
                     <td>
                         <!-- Botão de Editar -->
-                        <a href="{{ route('usuarios.edit', $usuario->id) }}" class="btn btn-warning btn-sm"><i class="fa-solid fa-pen"></i></a>
+                        <a href="{{ route('usuarios.edit', $usuario->id) }}" class="btn btn-warning btn-sm"><i
+                                class="fa-solid fa-pen"></i></a>
 
                         <!-- Formulário para desvincular o usuário da escola -->
                         <form action="{{ route('escolas.desvincularUsuario', [$local->id, $usuario->id]) }}" method="POST"
                             style="display:inline;">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="btn btn-danger btn-sm"><i class="fa-solid fa-user-xmark"></i></button>
+                            <button type="submit" class="btn btn-danger btn-sm"><i
+                                    class="fa-solid fa-user-xmark"></i></button>
                         </form>
                     </td>
                 </tr>

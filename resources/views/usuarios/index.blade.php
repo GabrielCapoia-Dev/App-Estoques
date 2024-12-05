@@ -6,12 +6,10 @@
     <div class="mb-3">
         <a href="{{ route('usuarios.create') }}" class="btn btn-success"><i class="fa-solid fa-plus"></i> Novo</a>
 
-        {{-- Mostrar botão de "Ver Inativos" apenas se o usuário estiver vendo os ativos --}}
         @if (count($usuarios) > 0 && $usuarios->first()->status_usuario === 'Ativo')
             <a href="{{ route('usuarios.index', ['mostrar_inativos' => 'true']) }}" class="btn btn-secondary"><i class="fa-regular fa-eye-slash"></i></a>
         @endif
 
-        {{-- Mostrar botão de "Ver Ativos" apenas se o usuário estiver vendo os inativos --}}
         @if ((count($usuarios) == 0 ) || (count($usuarios) > 0 && $usuarios->first()->status_usuario === 'Inativo'))
             <a href="{{ route('usuarios.index') }}" class="btn btn-secondary"><i class="fa-regular fa-eye"></i></a>
         @endif
