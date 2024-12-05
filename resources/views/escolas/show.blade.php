@@ -1,6 +1,17 @@
 @extends('layouts.index')
 
 @section('content')
+    <!-- Exibindo erros, caso existam -->
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul>
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <!-- Formulário para vincular um usuário existente -->
     <h3>Vincular Funcionário</h3>
     <form action="{{ route('escolas.vincularUsuario', $local->id) }}" method="POST">
@@ -15,7 +26,7 @@
                 </select>
 
                 <!-- Botão de Vincular -->
-                <button type="submit" class="btn btn-primary">Vincular</button>
+                <button type="submit" class="btn btn-primary"><i class="fas fa-users-cog"></i></button>
             </div>
         </div>
     </form>
@@ -25,7 +36,7 @@
     <h1 class="h4">Funcionários da Escola: {{ $local->nome_local }}</h1>
 
     <div class="mb-3">
-        <a href="{{ route('escolas.index') }}" class="btn btn-secondary">Voltar para a lista de escolas</a>
+        <a href="{{ route('escolas.index') }}" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> Voltar</a>
     </div>
 
     <!-- Tabela para exibir os funcionários -->
@@ -50,14 +61,14 @@
                     <td>{{ $usuario->status_usuario }}</td>
                     <td>
                         <!-- Botão de Editar -->
-                        <a href="{{ route('usuarios.edit', $usuario->id) }}" class="btn btn-warning btn-sm">Editar</a>
+                        <a href="{{ route('usuarios.edit', $usuario->id) }}" class="btn btn-warning btn-sm"><i class="fa-solid fa-pen"></i></a>
 
                         <!-- Formulário para desvincular o usuário da escola -->
                         <form action="{{ route('escolas.desvincularUsuario', [$local->id, $usuario->id]) }}" method="POST"
                             style="display:inline;">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="btn btn-danger btn-sm">Desvincular</button>
+                            <button type="submit" class="btn btn-danger btn-sm"><i class="fa-solid fa-user-xmark"></i></button>
                         </form>
                     </td>
                 </tr>

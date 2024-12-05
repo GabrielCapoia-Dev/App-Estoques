@@ -25,12 +25,29 @@
 
         <div class="form-group">
             <label for="preco">Preço</label>
-            <input type="number" name="preco" class="form-control" required>
+            <input type="text" name="preco" class="form-control" id="preco">
         </div>
+
         <br>
-        <button type="submit" class="btn btn-success">Salvar Produto</button>
-        <a href="{{ route('produtos.index') }}" class="btn btn-secondary">Voltar</a>
+        <button type="submit" class="btn btn-success"><i class="fa-regular fa-floppy-disk"></i> Salvar</button>
+        <a href="{{ route('produtos.index') }}" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> Voltar</a>
 
     </form>
 @endsection
 
+<script>
+    document.getElementById("preco").addEventListener("input", function(e) {
+        let value = e.target.value;
+
+        // Substituir vírgula por ponto
+        value = value.replace(",", ".");
+
+        // Limitar o número de casas decimais
+        if (value.indexOf('.') !== -1) {
+            value = value.replace(/(\.\d{2})\d+$/, '$1'); // Limita a 2 casas decimais
+        }
+
+        // Atualiza o valor do campo com a formatação correta
+        e.target.value = value;
+    });
+</script>

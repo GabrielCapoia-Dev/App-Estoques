@@ -38,7 +38,7 @@
             @enderror
         </div>
         <br>
-        <button type="submit" class="btn btn-warning">Atualizar Categoria</button>
-        <a href="{{ route('categorias.index') }}" class="btn btn-secondary">Voltar</a>
+        <button type="submit" class="btn btn-warning"><i class="fa-solid fa-pen-to-square"></i> Editar</button>
+        <a href="{{ route('categorias.index') }}" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> Voltar</a>
     </form>
 @endsection

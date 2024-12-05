@@ -4,7 +4,7 @@
     <h1 class="h2">Lista de Categorias</h1>
 
     <div class="mb-3">
-        <a href="{{ route('categorias.create') }}" class="btn btn-success">Adicionar Categoria</a>
+        <a href="{{ route('categorias.create') }}" class="btn btn-success"><i class="fa-solid fa-plus"></i> Novo</a>
     </div>
 
     <!-- Tabela para exibir as categorias -->
@@ -27,8 +27,8 @@
                     <td>{{ $categoria->status_categoria }}</td>
                     <td>{{ $categoria->descricao_categoria }}</td>
                     <td>
-                        <a href="{{ route('categorias.show', $categoria->id) }}" class="btn btn-info btn-sm">Ver</a>
-                        <a href="{{ route('categorias.edit', $categoria->id) }}" class="btn btn-warning btn-sm">Editar</a>
+                        <a href="{{ route('categorias.show', $categoria->id) }}" class="btn btn-info btn-sm"><i class="fa-regular fa-eye"></i></a>
+                        <a href="{{ route('categorias.edit', $categoria->id) }}" class="btn btn-warning btn-sm"><i class="fa-solid fa-pen-to-square"></i></a>
                     </td>
                 </tr>
             @endforeach

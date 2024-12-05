@@ -6,6 +6,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meu Site</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+
+
     <!-- Link para o Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <style>
@@ -73,16 +76,18 @@
                     <a class="nav-link" href="{{ url('/escolas/listar') }}"><i class="fas fa-school"></i> Escolas</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url('/categorias/listar') }}"><i class="fas fa-th-list"></i> Categorias</a>
+                    <a class="nav-link" href="{{ url('/categorias/listar') }}"><i class="fas fa-th-list"></i>
+                        Categorias</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url('/produtos/listar') }}"><i class="fas fa-cogs"></i> Produtos</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url('/baixas/listar') }}"><i class="fas fa-arrow-down"></i> Baixas</a>
+                    <a class="nav-link" href="{{ url('/baixas/listar') }}"><i class="fa-solid fa-recycle"></i> Baixas</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url('/relatorios/listar') }}"><i class="fas fa-chart-line"></i> Relatórios</a>
+                    <a class="nav-link" href="{{ url('/relatorios/listar') }}"><i class="fas fa-chart-line"></i>
+                        Relatórios</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url('/usuarios/listar') }}"><i class="fas fa-users"></i> Usuários</a>
@@ -102,7 +107,8 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url('/escolas/listar') }}"><i class="fas fa-school"></i> Escolas</a>
+                        <a class="nav-link" href="{{ url('/escolas/listar') }}"><i class="fas fa-school"></i>
+                            Escolas</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url('/categorias') }}"><i class="fas fa-th-list"></i>
@@ -112,14 +118,15 @@
                         <a class="nav-link" href="{{ url('/produtos') }}"><i class="fas fa-cogs"></i> Produtos</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url('/baixas') }}"><i class="fas fa-arrow-down"></i> Baixas</a>
+                        <a class="nav-link" href="{{ url('/baixas') }}"><i class="fa-solid fa-recycle"></i> Baixas</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url('/relatorios') }}"><i class="fas fa-chart-line"></i>
                             Relatórios</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url('/usuarios/listar') }}"><i class="fas fa-users"></i> Usuários</a>
+                        <a class="nav-link" href="{{ url('/usuarios/listar') }}"><i class="fas fa-users"></i>
+                            Usuários</a>
                     </li>
                 </ul>
             </div>
@@ -133,8 +140,10 @@
         </main>
     </div>
 
+
     <!-- Script do Bootstrap -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
 </body>
 
 </html>

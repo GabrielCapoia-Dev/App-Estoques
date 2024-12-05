@@ -70,12 +70,7 @@ class CategoriaController extends Controller
      */
     public function show($id)
     {
-        $categoria = Categoria::find($id);
-
-        if (!$categoria) {
-            return redirect()->route('categorias.index')->with('error', 'Categoria não encontrada!');
-        }
-
+        $categoria = Categoria::with('produtos')->findOrFail($id); // Carrega a categoria com seus produtos
         return view('categorias.show', compact('categoria'));
     }
 

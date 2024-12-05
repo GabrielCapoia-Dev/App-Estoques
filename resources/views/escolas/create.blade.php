@@ -25,7 +25,7 @@
             <div class="col-md-6">
                 <div class="mb-3">
                     <label for="cep" class="form-label">CEP</label>
-                    <input type="number" class="form-control" id="cep" name="cep" required onblur="buscarCep()" >
+                    <input type="number" class="form-control" id="cep" name="cep" required onblur="buscarCep()">
                 </div>
             </div>
 
@@ -74,7 +74,8 @@
             <input type="text" class="form-control" id="complemento" name="complemento">
         </div>
 
-        <button type="submit" class="btn btn-primary">Cadastrar Escola</button>
+        <button type="submit" class="btn btn-success"><i class="fa-regular fa-floppy-disk"></i> Salvar</button>
+        <a href="{{ route('escolas.index') }}" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> Voltar</a>
     </form>
 
     {{-- Script para buscar o CEP e preencher os campos --}}

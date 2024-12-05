@@ -25,6 +25,6 @@ class Produto extends Model
     public function estoques()
     {
         return $this->belongsToMany(Estoque::class, 'estoque_produto')
-            ->withPivot('quantidade_atual', 'quantidade_minima', 'quantidade_maxima', 'validade');
+            ->withPivot('id', 'quantidade_atual', 'quantidade_minima', 'quantidade_maxima', 'validade');
     }
 }

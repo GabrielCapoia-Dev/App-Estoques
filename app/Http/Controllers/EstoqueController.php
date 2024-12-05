@@ -66,11 +66,17 @@ class EstoqueController extends Controller
      */
     public function show($escolaId, $estoqueId)
     {
-        $estoque = Estoque::findOrFail($estoqueId);
-        $escola = $estoque->local;  // Como o estoque está relacionado com local (escola)
+        $estoque = Estoque::with(['produtos' => function ($query) {
+            // Filtra produtos com quantidade_atual maior que 0
+            $query->wherePivot('quantidade_atual', '>', 0)
+                ->withPivot('id', 'quantidade_atual', 'quantidade_minima', 'quantidade_maxima', 'validade');
+        }])->findOrFail($estoqueId);
+
+        $escola = $estoque->local;
 
         return view('estoques.show', compact('estoque', 'escola'));
     }
+
 
 
     /**

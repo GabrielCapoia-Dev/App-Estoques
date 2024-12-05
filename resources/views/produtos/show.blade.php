@@ -17,12 +17,12 @@
             <td>{{ $produto->descricao_produto }}</td>
         </tr>
         <tr>
-            <th>Preço</th>
-            <td>{{ number_format($produto->preco, 2, ',', '.') }}</td>
+            <th>Preço R$</th>
+            <td>{{ $produto->preco }}</td>
         </tr>
 
     </table>
 
-    <a href="{{ route('produtos.index') }}" class="btn btn-secondary">Voltar para a lista</a>
-    <a href="{{ route('produtos.edit', $produto->id) }}" class="btn btn-warning">Editar Produto</a>
+    <a href="{{ route('produtos.edit', $produto->id) }}" class="btn btn-warning"><i class="fa-solid fa-pen-to-square"></i> Editar</a>
+    <a href="{{ route('produtos.index') }}" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> Voltar</a>
 @endsection

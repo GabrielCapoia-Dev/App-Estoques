@@ -52,7 +52,7 @@
         </div>
 
         <br>
-        <button type="submit" class="btn btn-success">Salvar</button>
-        <a href="{{ route('estoques.show', ['escola' => $estoque->local->id, 'estoque' => $estoque->id]) }}" class="btn btn-secondary">Voltar</a>
+        <button type="submit" class="btn btn-success"><i class="fa-regular fa-floppy-disk"></i> Salvar</button>
+        <a href="{{ route('estoques.show', ['escola' => $estoque->local->id, 'estoque' => $estoque->id]) }}" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> Voltar</a>
     </form>
 @endsection

@@ -2,166 +2,73 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\EstoqueProduto;
 use App\Models\DescarteProduto;
-use App\Models\Produto;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 
 class DescarteProdutoController extends Controller
 {
     /**
-     * Visualizar todos os produtos descartados
+     * Processa o descarte do produto no estoque.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $estoqueId
+     * @param  int  $pivotId
+     * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function store(Request $request, $estoqueId, $pivotId)
     {
-        $descartes = DescarteProduto::all();
-        return response()->json([
-            'error' => false,
-            'message' => 'Descartes encontrados.',
-            'descartes' => $descartes
-        ], 200);
-    }
-
-    /**
-     * Criar um novo descarte
-     */
-    public function store(Request $request, $id_produto)
-    {
-        $produto = Produto::find($id_produto);
-
-        if (!$produto) {
-            return response()->json([
-                'error' => true,
-                'message' => 'Produto não encontrado.'
-            ], 404);
-        }
-
-        $validator = Validator::make(
-            $request->all(),
-            [
-                'id_produto' => 'required|exists:produtos,id',
-                'quantidade_descarte' => 'required|numeric|min:0',
-                'descricao_descarte' => 'required|string|min:2|max:255',
-                'vencimento_descarte' => 'required|in:Sim,Não',
-                'defeito_descarte' => 'required|in:Sim,Não',
-                'data_descarte' => 'required|date_format:Y-m-d',
-            ],
-            [
-                'required' => 'O campo :attribute é obrigatório.',
-                'exists' => 'O campo :attribute não existe.',
-                'string' => 'O campo :attribute deve ser uma string.',
-                'min' => 'O campo :attribute deve ter no mínimo :min caracteres.',
-                'max' => 'O campo :attribute deve ter no máximo :max caracteres.',
-                'numeric' => 'O campo :attribute deve ser um número.',
-                'date_format' => 'O campo :attribute deve ser uma data no formato Y-m-d.',
-                'in' => 'O campo :attribute deve ser um dos seguintes valores: :values.',
-            ],
-            [
-                'id_produto' => 'ID do produto',
-                'quantidade_descarte' => 'Quantidade descartada',
-                'descricao_descarte' => 'Descrição do descarte',
-                'vencimento_descarte' => 'Vencimento do descarte',
-                'defeito_descarte' => 'Defeito do descarte',
-                'data_descarte' => 'Data do descarte',
-            ]
-        );
-
-        if ($validator->fails()) {
-            return response()->json([
-                'error' => true,
-                'message' => 'Erro ao criar descarte.',
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
-        $descarte = DescarteProduto::create([
-            'id_produto' => $produto->id,
-            'quantidade_descarte' => $request->quantidade_descarte,
-            'descricao_descarte' => $request->descricao_descarte,
-            'vencimento_descarte' => $request->vencimento_descarte,
-            'defeito_descarte' => $request->defeito_descarte,
-            'data_descarte' => $request->data_descarte,
+        // Valida se a quantidade de descarte é válida
+        $request->validate([
+            'quantidade_descarte' => 'required|integer|min:1',
         ]);
 
-        return response()->json([
-            'error' => false,
-            'message' => 'Descarte criado com sucesso.',
-            'descarte' => $descarte
-        ], 201);
-    }
+        // Recupera o produto no estoque
+        $estoqueProduto = EstoqueProduto::where('id', $pivotId)
+            ->where('estoque_id', $estoqueId)
+            ->first();
 
-    /**
-     * Visualizar o descarte de um produto especifico
-     */
-    public function show($id_produto)
-    {
-        $descartes = DescarteProduto::where('id_produto', $id_produto)->get();
-        return response()->json([
-            'error' => false,
-            'message' => 'Descartes encontrados.',
-            'descartes' => $descartes
-        ], 200);
-    }
-
-    /**
-     * Atualizar informacoes do descarte
-     */
-    public function update(Request $request, $id_descarte)
-    {
-        $descarte = DescarteProduto::find($id_descarte);
-
-        if (!$descarte) {
-            return response()->json([
-                'error' => true,
-                'message' => 'Descarte nao encontrado.'
-            ], 404);
+        if (!$estoqueProduto) {
+            return redirect()->back()->withErrors('Produto não encontrado no estoque.');
         }
 
-        $validator = Validator::make(
-            $request->all(),
-            [
-                'id_produto' => 'required|exists:produtos,id',
-                'quantidade_descarte' => 'required|numeric|min:0',
-                'descricao_descarte' => 'required|string|min:2|max:255',
-                'vencimento_descarte' => 'required|in:Sim,Não',
-                'defeito_descarte' => 'required|in:Sim,Não',
-                'data_descarte' => 'required|date_format:Y-m-d',
-            ],
-            [
-                'required' => 'O campo :attribute é obrigatório.',
-                'exists' => 'O campo :attribute não existe.',
-                'string' => 'O campo :attribute deve ser uma string.',
-                'min' => 'O campo :attribute deve ter no mínimo :min caracteres.',
-                'max' => 'O campo :attribute deve ter no máximo :max caracteres.',
-                'numeric' => 'O campo :attribute deve ser um número.',
-                'date_format' => 'O campo :attribute deve ser uma data no formato Y-m-d.',
-                'in' => 'O campo :attribute deve ser um dos seguintes valores: :values.',
-            ],
-            [
-                'id_produto' => 'ID do produto',
-                'quantidade_descarte' => 'Quantidade descartada',
-                'descricao_descarte' => 'Descrição do descarte',
-                'vencimento_descarte' => 'Vencimento do descarte',
-                'defeito_descarte' => 'Defeito do descarte',
-                'data_descarte' => 'Data do descarte',
-            ]
-        );
-
-        $descarte->update($request->all());
-
-        if ($validator->fails()) {
-            return response()->json([
-                'error' => true,
-                'message' => 'Erro ao criar descarte.',
-                'errors' => $validator->errors()
-            ], 422);
+        // Verifica se a quantidade de descarte não é maior que a quantidade disponível
+        if ($request->quantidade_descarte > $estoqueProduto->quantidade_atual) {
+            return redirect()->back()->withErrors('A quantidade a ser descartada é maior do que a quantidade disponível.');
         }
 
-        return response()->json([
-            'error' => false,
-            'message' => 'Descarte atualizado com sucesso.',
-            'descarte' => $descarte
-        ], 200);
-    }
+        // Inicia uma transação para garantir que tudo aconteça de forma atômica
+        DB::beginTransaction();
 
+        try {
+            // Cria o registro de descarte
+            DescarteProduto::create([
+                'id_estoque_produto' => $pivotId,
+                'quantidade_descarte' => $request->quantidade_descarte,
+                'defeito_descarte' => $request->defeito_descarte ?? 'Não informado',
+                'descricao_descarte' => $request->descricao_descarte ?? 'Não informado',
+            ]);
+
+
+            // Atualiza a quantidade do produto no estoque
+            $estoqueProduto->quantidade_atual -= $request->quantidade_descarte;
+            $estoqueProduto->save();
+
+            // Commit da transação
+            DB::commit();
+
+            // Log para verificação no console
+
+            // Retorna para a página de detalhes do produto com a mensagem de sucesso
+            return redirect()->route('estoques.produtos.show', ['estoque' => $estoqueId, 'pivotId' => $pivotId])
+                ->with('success', 'Produto descartado com sucesso.');
+        } catch (\Exception $e) {
+            // Em caso de erro, faz o rollback da transação
+            DB::rollback();
+            // Log do erro
+
+            return redirect()->back()->withErrors('Erro ao processar o descarte. Tente novamente.');
+        }
+    }
 }

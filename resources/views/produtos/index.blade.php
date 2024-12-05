@@ -2,7 +2,7 @@
 
 @section('content')
     <h1>Produtos</h1>
-    <a href="{{ route('produtos.create') }}" class="btn btn-success">Criar Produto</a>
+    <a href="{{ route('produtos.create') }}" class="btn btn-success"><i class="fa-solid fa-plus"></i> Novo</a>
     <table class="table">
         <thead>
             <tr>
@@ -19,12 +19,12 @@
                 <tr>
                     <td>{{ $produto->id }}</td>
                     <td>{{ $produto->nome_produto }}</td>
-                    <td>{{ number_format($produto->preco, 2, ',', '.') }}</td>
+                    <td>{{ $produto->preco }}</td>
                     <td>{{ $produto->categoria->nome_categoria }}</td>
                     <td>{{ $produto->status_produto }}</td>
                     <td>
-                        <a href="{{ route('produtos.show', $produto->id) }}" class="btn btn-info btn-sm">Ver</a>
-                        <a href="{{ route('produtos.edit', $produto->id) }}" class="btn btn-warning btn-sm">Editar</a>
+                        <a href="{{ route('produtos.show', $produto->id) }}" class="btn btn-info btn-sm"><i class="fa-regular fa-eye"></i></a>
+                        <a href="{{ route('produtos.edit', $produto->id) }}" class="btn btn-warning btn-sm"><i class="fa-solid fa-pen-to-square"></i></a>
                     </td>
                 </tr>
             @endforeach

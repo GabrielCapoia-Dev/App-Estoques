@@ -4,7 +4,7 @@
     <h1>Lista de Escolas</h1>
 
     <div class="mb-3">
-        <a href="{{ route('escolas.create') }}" class="btn btn-success">Nova Escola</a>
+        <a href="{{ route('escolas.create') }}" class="btn btn-success"><i class="fa-solid fa-plus"></i> Novo</a>
     </div>
 
     <!-- Tabela para exibir as escolas -->
@@ -25,13 +25,13 @@
                     <td>{{ $escola->status_local }}</td>
                     <td>
                         <!-- Link para ver mais detalhes da escola -->
-                        <a href="{{ route('escolas.show', $escola->id) }}" class="btn btn-info btn-sm">Ver</a>
+                        <a href="{{ route('escolas.show', $escola->id) }}" class="btn btn-info btn-sm"><i class="fa-regular fa-eye"></i></a>
                         
                         <!-- Link para editar a escola -->
-                        <a href="{{ route('escolas.edit', $escola->id) }}" class="btn btn-warning btn-sm">Editar</a>
+                        <a href="{{ route('escolas.edit', $escola->id) }}" class="btn btn-warning btn-sm"><i class="fa-solid fa-pen"></i></a>
                         
                         <!-- Link para listar estoques da escola -->
-                        <a href="{{ route('estoques.index', $escola->id) }}" class="btn btn-success btn-sm">Estoques</a>
+                        <a href="{{ route('estoques.index', $escola->id) }}" class="btn btn-success btn-sm"><i class="fa-solid fa-boxes-stacked"></i></a>
                     </td>
                 </tr>
             @endforeach

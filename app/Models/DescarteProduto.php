@@ -9,19 +9,20 @@ class DescarteProduto extends Model
 {
     use HasFactory;
 
-
     protected $fillable = [
-        'id_produto',
-        'vencimento_descarte',
-        'data_vencimento_descarte',
+        'id_estoque_produto',
         'defeito_descarte',
         'descricao_descarte',
         'quantidade_descarte',
     ];
 
-
-    public function produto()
+    /**
+     * Relacionamento com a tabela de estoque_produto.
+     * 
+     * Isso nos permite acessar o produto associado ao descarte.
+     */
+    public function estoqueProduto()
     {
-        return $this->belongsTo(Produto::class);
+        return $this->belongsTo(EstoqueProduto::class, 'id_estoque_produto');
     }
 }

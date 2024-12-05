@@ -7,25 +7,14 @@ use Illuminate\Http\Request;
 
 class HistoricoProdutoController extends Controller
 {
-    /**
-     * Retorna todos os itens do historico
-     */
-    public function index()
+    public function index($estoqueId, $produtoId)
     {
-        $historico = HistoricoProduto::all();
+        // Supondo que o modelo de Histórico esteja relacionado com Produto e Estoque
+        $historico = HistoricoProduto::where('estoque_id', $estoqueId)
+            ->where('produto_id', $produtoId)
+            ->get();
 
-        if(!$historico) {
-            return response()->json([
-                'error' => true,
-                'message' => 'Nenhum item encontrado.'
-            ], 404);
-        }
-
-        return response()->json([
-            'error' => false,
-            'message' => 'Itens encontrados.',
-            'historico' => $historico
-        ], 200);
+        return response()->json($historico);
     }
 
     /**
@@ -56,7 +45,7 @@ class HistoricoProdutoController extends Controller
     {
         $historico = HistoricoProduto::find($id);
 
-        if(!$historico) {
+        if (!$historico) {
             return response()->json([
                 'error' => true,
                 'message' => 'Nenhum item encontrado.'
@@ -77,7 +66,7 @@ class HistoricoProdutoController extends Controller
     {
         $historicoProduto = HistoricoProduto::where('id_produto', $id)->get();
 
-        if(!$historicoProduto) {
+        if (!$historicoProduto) {
             return response()->json([
                 'error' => true,
                 'message' => 'Nenhum item encontrado.'
@@ -90,6 +79,4 @@ class HistoricoProdutoController extends Controller
             'historico' => $historicoProduto
         ], 200);
     }
-
-
 }

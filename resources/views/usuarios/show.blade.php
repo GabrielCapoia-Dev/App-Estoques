@@ -29,6 +29,6 @@
         @endforeach
     </ul>
 
-    <a href="{{ route('usuarios.edit', $usuario->id) }}" class="btn btn-warning">Editar</a>
-    <a href="{{ route('usuarios.index', $usuario->id) }}" class="btn btn-info">Voltar</a>
+    <a href="{{ route('usuarios.edit', $usuario->id) }}" class="btn btn-warning"><i class="fa-solid fa-pen-to-square"></i> Editar</a>
+    <a href="{{ route('usuarios.index', $usuario->id) }}" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> Voltar</a>
 @endsection

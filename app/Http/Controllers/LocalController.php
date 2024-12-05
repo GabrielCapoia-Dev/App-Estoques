@@ -6,6 +6,7 @@ use App\Models\Estoque;
 use App\Models\Local;
 use App\Models\Usuario;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use PgSql\Lob;
 
@@ -145,22 +146,33 @@ class LocalController extends Controller
     /**
      * Vincula um usuário já existente a um local (escola).
      */
-    public function vincularUsuario(Request $request, $local_id)
+    public function vincularUsuario(Request $request, $localId)
     {
-        $local = Local::findOrFail($local_id);
+        // Verifica se o usuário já está vinculado a esta escola
+        $usuarioId = $request->input('usuario_id');
 
-        // Validação: Verifica se o usuário existe
-        $usuario = Usuario::find($request->usuario_id);
+        $existingLink = DB::table('usuarios_locals')
+            ->where('local_id', $localId)
+            ->where('usuario_id', $usuarioId)
+            ->exists();
 
-        if (!$usuario) {
-            return redirect()->back()->with('error', 'Usuário não encontrado!');
+        if ($existingLink) {
+            // Se o vínculo já existir, retorna com um erro
+            return redirect()->back()->withErrors('Este usuário já está vinculado a essa escola!');
         }
 
-        // Vincula o usuário ao local
-        $local->usuarios()->attach($usuario);
+        // Caso contrário, cria o vínculo
+        DB::table('usuarios_locals')->insert([
+            'local_id' => $localId,
+            'usuario_id' => $usuarioId,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
 
-        return redirect()->route('escolas.show', $local->id)->with('success', 'Funcionário vinculado com sucesso!');
+        // Redireciona para a página com sucesso
+        return redirect()->route('escolas.show', $localId)->with('success', 'Usuário vinculado com sucesso!');
     }
+
 
     /**
      * Desvincula um usuário de um local (escola).
