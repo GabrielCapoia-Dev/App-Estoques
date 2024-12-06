@@ -74,6 +74,10 @@ Route::prefix('estoques/{estoque}/produtos')->name('estoques.produtos.')->group(
     Route::get('/{produto}/visualizar', [EstoqueProdutoController::class, 'show'])->name('show');
 });
 
+Route::prefix('estoques/{estoque}/baixas')->name('estoques.baixas.')->group(function () {
+    Route::get('/listar', [DescarteProdutoController::class, 'index'])->name('listar');
+});
+
 Route::prefix('estoques/{estoque}/produtos')->name('historico.produtos.')->group(function () {
     Route::get('/{produto}/historico', [HistoricoProdutoController::class, 'index'])->name('index');
 });

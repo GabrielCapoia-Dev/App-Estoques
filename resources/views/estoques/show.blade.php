@@ -1,6 +1,6 @@
 @extends('layouts.index')
 
-<!-- Modal -->
+<!-- Modal Informativo de Quantidades -->
 <div class="modal fade" id="produtoModal" tabindex="-1" aria-labelledby="produtoModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-sm">
         <div class="modal-content">
@@ -25,33 +25,40 @@
     <div class="modal-dialog modal-sm">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="descarteModalLabel">Descarte de Produto</h5>
+                <h5 class="modal-title" id="descarteModalLabel">Baixa de Produto</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form id="descarteForm"
                 action="{{ route('estoques.produtos.descarte', ['estoque' => $estoque->id, 'pivotId' => ':pivotId']) }}"
-                method="POST">
+                method="POST" onsubmit="handleDescarteFormSubmit(event)">
                 @csrf
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="quantidade_descarte" class="form-label">Quantidade a Descartar</label>
+                        <label for="quantidade_descarte" class="form-label">Quantidade Baixa*</label>
                         <input type="number" class="form-control" id="quantidade_descarte" name="quantidade_descarte"
                             min="1" required>
                     </div>
                     <div class="mb-3">
-                        <label for="defeito_descarte" class="form-label">Defeito (opcional)</label>
-                        <textarea class="form-control" id="defeito_descarte" name="defeito_descarte"></textarea>
+                        <label for="defeito_descarte" class="form-label">Motivo*</label>
+                        <select class="form-control" id="defeito_descarte" name="defeito_descarte">
+                            <option value="">Selecione o motivo do descarte</option>
+                            <option value="Utilizado">Utilizado</option>
+                            <option value="Vencimento">Vencimento</option>
+                            <option value="Improprio para Consumo">Impróprio para consumo</option>
+                            <option value="Danificado">Danificado</option>
+                        </select>
                     </div>
                     <div class="mb-3">
-                        <label for="descricao_descarte" class="form-label">Descrição do Descarte</label>
+                        <label for="descricao_descarte" class="form-label">Descrição da Baixa</label>
                         <textarea class="form-control" id="descricao_descarte" name="descricao_descarte"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                    <button type="submit" class="btn btn-danger">Descartar</button>
+                    <button type="submit" class="btn btn-danger">Baixa</button>
                 </div>
             </form>
+
         </div>
     </div>
 </div>
@@ -84,8 +91,11 @@
         </thead>
         <tbody>
             @foreach ($estoque->produtos as $produto)
-                <tr class="produto-item" data-produto-id="{{ $produto->id }}" data-nome="{{ $produto->nome_produto }}"
-                    data-preco="{{ $produto->preco }}" data-quantidade-minima="{{ $produto->pivot->quantidade_minima }}"
+                <tr class="produto-item" 
+                    data-produto-id="{{ $produto->id }}"  
+                    data-nome="{{ $produto->nome_produto }}"
+                    data-preco="{{ $produto->preco }}" 
+                    data-quantidade-minima="{{ $produto->pivot->quantidade_minima }}"
                     data-quantidade-maxima="{{ $produto->pivot->quantidade_maxima }}"
                     data-categoria="{{ $produto->categoria->nome_categoria }}"
                     data-quantidade="{{ $produto->pivot->quantidade_atual }}">
@@ -93,6 +103,7 @@
                     <td>{{ $produto->pivot->quantidade_atual }}</td>
                     <td>{{ $produto->pivot->validade }}</td>
                     <td>
+
                         <!-- Botões para editar e dar baixa no produto -->
 
                         <a href="{{ route('estoques.produtos.edit', ['estoque' => $estoque->id, 'pivotId' => $produto->pivot->id]) }}"
@@ -114,6 +125,8 @@
         </tbody>
     </table>
 @endsection
+
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
 
 <script>
@@ -160,67 +173,90 @@
         });
     });
 </script>
+
 <script>
-    $(document).ready(function() {
-        // Quando o modal for aberto
-        $('#descarteModal').on('show.bs.modal', function(event) {
-            var button = $(event.relatedTarget);
-            var quantidadeAtual = button.data('quantidade');
-            var pivotId = button.data('pivotid');
+    let quantidadeMaxima; // Variável global para guardar a quantidade máxima
+    let pivotId; // Variável global para guardar o pivot ID
 
-            var modal = $(this);
-            modal.find('#quantidade_descarte').attr('max', quantidadeAtual);
-            modal.find('#quantidade_descarte').val('');
-            modal.find('#quantidade_descarte').removeClass('is-invalid');
-            modal.find('form').attr('action', '/estoques/{{ $estoque->id }}/produtos/descarte/' +
-                pivotId);
-        });
+    // Evento Global de Clique para capturar o clique do botão
+    document.addEventListener('click', (event) => {
+        const btnDescarte = event.target.closest('[data-bs-target="#descarteModal"]');
+        if (btnDescarte) {
+            // Obtendo os valores dos atributos data-* do botão
+            quantidadeMaxima = parseInt(btnDescarte.dataset.quantidade, 10);
+            pivotId = btnDescarte.dataset.pivotid;
 
-
-        // Adicionando um listener para antes do envio do formulário
-        $('#descarteModal form').submit(function(event) {
-            event.preventDefault(); // Impede o envio padrão do formulário
-
-            var quantidadeDescarte = $('#quantidade_descarte').val();
-            var quantidadeMaxima = $('#quantidade_descarte').attr('max');
-
-            // Verifica se a quantidade informada é válida
-            if (!quantidadeDescarte || quantidadeDescarte < 1 || quantidadeDescarte >
-                quantidadeMaxima) {
-                $('#quantidade_descarte').addClass('is-invalid'); // Marca o campo com erro
-                alert(
-                    "A quantidade de descarte precisa ser um número válido e não pode ser maior que a quantidade disponível."
-                );
-            } else {
-                $('#quantidade_descarte').removeClass(
-                    'is-invalid'); // Remove a classe de erro se válido
-
-                // Captura o ID do produto (do botão que abriu o modal)
-                var pivotId = button.data(
-                    'pivotid'); // Adicione o atributo 'data-pivotid' no botão de descarte
-
-                // Usando AJAX para enviar o formulário de descarte
-                $.ajax({
-                    url: '/estoques/' + {{ $estoque->id }} + '/produtos/descarte/' +
-                        pivotId, // Altere com o endpoint correto
-                    method: 'POST',
-                    data: {
-                        _token: '{{ csrf_token() }}', // Adiciona o token CSRF
-                        quantidade_descarte: quantidadeDescarte,
-                        defeito_descarte: $('#defeito_descarte').val(),
-                        descricao_descarte: $('#descricao_descarte').val()
-                    },
-                    success: function(response) {
-                        console.log("Dados alterados com sucesso:", response);
-                        // Aqui você pode fazer algo como atualizar a interface, mostrar uma mensagem de sucesso, etc.
-                        $('#descarteModal').modal('hide'); // Fecha o modal após sucesso
-                    },
-                    error: function(xhr, status, error) {
-                        console.log("Erro ao tentar alterar os dados:", xhr.responseText);
-                        // Aqui você pode lidar com erros, por exemplo, mostrando uma mensagem ao usuário
-                    }
-                });
-            }
-        });
+            console.log('Quantidade Máxima do Produto:', quantidadeMaxima);
+            console.log('Pivot ID do Produto:', pivotId);
+        }
     });
+
+    function handleDescarteFormSubmit(event) {
+        event.preventDefault(); // Impede o envio padrão do formulário
+
+        const form = event.target;
+        if (!form) {
+            console.error("Formulário não encontrado.");
+            return;
+        }
+
+        const quantidadeDescarte = parseInt(form.querySelector('#quantidade_descarte').value, 10);
+        const url = form.getAttribute('action'); // Certifique-se de que o form tem o atributo 'action'
+
+        // Substituir o valor do :pivotId na URL
+        const urlComPivotId = url.replace(':pivotId', pivotId);
+
+        // Verificar se o URL foi encontrado
+        if (!urlComPivotId) {
+            console.error("A URL de envio do formulário não foi definida.");
+            return;
+        }
+
+        console.log('Quantidade Descarte = ' + quantidadeDescarte);
+        console.log('Quantidade Máxima = ' + quantidadeMaxima);
+        console.log('Pivot ID = ' + pivotId);
+
+        // Validação da quantidade de descarte
+        if (isNaN(quantidadeDescarte) || quantidadeDescarte < 1 || quantidadeDescarte > quantidadeMaxima) {
+            form.querySelector('#quantidade_descarte').classList.add('is-invalid');
+            alert(
+                "A quantidade de descarte precisa ser um número válido e não pode ser maior que a quantidade disponível."
+            );
+            return;
+        }
+
+        form.querySelector('#quantidade_descarte').classList.remove('is-invalid');
+
+        // Envio via AJAX
+        const formData = new FormData(form);
+
+        fetch(urlComPivotId, {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => {
+                // Verifique se a resposta é uma página HTML ou erro
+                if (response.headers.get('Content-Type').includes('text/html')) {
+                    return response.text().then(text => {
+                        console.error("Erro HTML recebido:", text);
+                        throw new Error('A resposta não é JSON.');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log("Descarte realizado com sucesso:", data);
+
+                // Fechar o modal
+                const descarteModal = document.getElementById('descarteModal');
+                const modal = bootstrap.Modal.getInstance(descarteModal);
+                modal.hide(); // Fecha o modal
+
+                // Atualiza a página (recarrega)
+                window.location.reload();
+            })
+            .catch(error => {
+                console.error("Erro ao realizar descarte:", error);
+            });
+    }
 </script>

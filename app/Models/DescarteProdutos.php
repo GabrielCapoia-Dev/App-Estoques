@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class DescarteProduto extends Model
+class DescarteProdutos extends Model
 {
     use HasFactory;
 
@@ -21,8 +21,9 @@ class DescarteProduto extends Model
      * 
      * Isso nos permite acessar o produto associado ao descarte.
      */
-    public function estoqueProduto()
+    // No modelo DescarteProduto
+    public function produto()
     {
-        return $this->belongsTo(EstoqueProduto::class, 'id_estoque_produto');
+        return $this->belongsTo(Produto::class, 'id_estoque_produto');
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Estoque;
 use App\Models\Local;
+use App\Models\Produto;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -72,9 +73,12 @@ class EstoqueController extends Controller
                 ->withPivot('id', 'quantidade_atual', 'quantidade_minima', 'quantidade_maxima', 'validade');
         }])->findOrFail($estoqueId);
 
+        $produtos = Produto::all();
+
+
         $escola = $estoque->local;
 
-        return view('estoques.show', compact('estoque', 'escola'));
+        return view('estoques.show', compact('estoque', 'escola', 'produtos'));
     }
 
 

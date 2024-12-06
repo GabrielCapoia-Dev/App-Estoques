@@ -3,12 +3,62 @@
 namespace App\Http\Controllers;
 
 use App\Models\EstoqueProduto;
-use App\Models\DescarteProduto;
+use App\Models\DescarteProdutos;
+use App\Models\Estoque;
+use App\Models\Produto;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class DescarteProdutoController extends Controller
 {
+
+    /**
+     * Exibir todas as baixas de um estoque
+     */
+
+    public function index($estoqueId)
+    {
+        $estoque = Estoque::with(['produtos' => function ($query) {
+            $query->wherePivot('quantidade_atual', '>', 0)
+                ->withPivot('id', 'quantidade_atual', 'quantidade_minima', 'quantidade_maxima', 'validade');
+        }])->findOrFail($estoqueId);
+
+        $estoque_produto = EstoqueProduto::where("estoque_id", $estoqueId)->get();
+
+        $estoqueProdutoIds = $estoque_produto->pluck('id');
+
+        $produtosIds = $estoque_produto->pluck('produto_id');
+
+        $produtos = Produto::whereIn('id', $produtosIds)->get();
+
+        $baixas = DescarteProdutos::with('produto')
+            ->whereIn('id_estoque_produto', $estoqueProdutoIds)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $dadosCompletos = $baixas->map(function ($baixa) use ($produtos, $estoque_produto) {
+            $estoqueProduto = $estoque_produto->firstWhere('id', $baixa->id_estoque_produto);
+
+            $produto = $produtos->firstWhere('id', $estoqueProduto->produto_id);
+
+            return [
+                'id_estoque_produto' => $estoqueProduto->id,
+                'nome_produto' => $produto ? $produto->nome_produto : 'Produto não encontrado',
+                'quantidade_descarte' => $baixa->quantidade_descarte,
+                'defeito_descarte' => $baixa->defeito_descarte ?? 'Não especificado',
+                'descricao_descarte' => $baixa->descricao_descarte ?? 'Sem descrição',
+                'validade' => $estoqueProduto->validade
+                    ? \Carbon\Carbon::createFromFormat('Y-m-d', $estoqueProduto->validade)->format('d/m/Y')
+                    : 'Sem validade',
+                'created_at' => $baixa->created_at->format('d/m/Y H:i')
+            ];
+        });
+
+        return view('baixas.index', compact('dadosCompletos', 'estoque'));
+    }
+
+
+
+
     /**
      * Processa o descarte do produto no estoque.
      *
@@ -19,12 +69,10 @@ class DescarteProdutoController extends Controller
      */
     public function store(Request $request, $estoqueId, $pivotId)
     {
-        // Valida se a quantidade de descarte é válida
         $request->validate([
             'quantidade_descarte' => 'required|integer|min:1',
         ]);
 
-        // Recupera o produto no estoque
         $estoqueProduto = EstoqueProduto::where('id', $pivotId)
             ->where('estoque_id', $estoqueId)
             ->first();
@@ -33,42 +81,24 @@ class DescarteProdutoController extends Controller
             return redirect()->back()->withErrors('Produto não encontrado no estoque.');
         }
 
-        // Verifica se a quantidade de descarte não é maior que a quantidade disponível
         if ($request->quantidade_descarte > $estoqueProduto->quantidade_atual) {
             return redirect()->back()->withErrors('A quantidade a ser descartada é maior do que a quantidade disponível.');
         }
 
-        // Inicia uma transação para garantir que tudo aconteça de forma atômica
-        DB::beginTransaction();
-
-        try {
-            // Cria o registro de descarte
-            DescarteProduto::create([
-                'id_estoque_produto' => $pivotId,
-                'quantidade_descarte' => $request->quantidade_descarte,
-                'defeito_descarte' => $request->defeito_descarte ?? 'Não informado',
-                'descricao_descarte' => $request->descricao_descarte ?? 'Não informado',
-            ]);
+        $descarte = DescarteProdutos::create([
+            'id_estoque_produto' => $pivotId,
+            'quantidade_descarte' => $request->quantidade_descarte,
+            'defeito_descarte' => $request->defeito_descarte ?? 'Não informado',
+            'descricao_descarte' => $request->descricao_descarte ?? 'Não informado',
+        ]);
 
 
-            // Atualiza a quantidade do produto no estoque
-            $estoqueProduto->quantidade_atual -= $request->quantidade_descarte;
-            $estoqueProduto->save();
+        $estoqueProduto->quantidade_atual -= $request->quantidade_descarte;
+        $estoqueProduto->save();
 
-            // Commit da transação
-            DB::commit();
-
-            // Log para verificação no console
-
-            // Retorna para a página de detalhes do produto com a mensagem de sucesso
-            return redirect()->route('estoques.produtos.show', ['estoque' => $estoqueId, 'pivotId' => $pivotId])
-                ->with('success', 'Produto descartado com sucesso.');
-        } catch (\Exception $e) {
-            // Em caso de erro, faz o rollback da transação
-            DB::rollback();
-            // Log do erro
-
-            return redirect()->back()->withErrors('Erro ao processar o descarte. Tente novamente.');
-        }
+        return response()->json([
+            'success' => 'Produto descartado com sucesso.',
+            'descarte' => $descarte
+        ]);
     }
 }
