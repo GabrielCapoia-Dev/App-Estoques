@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meu Site</title>
+    <title>Gerenciamento</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
 
@@ -19,7 +19,8 @@
             left: 0;
             height: 100%;
             width: 250px;
-            background-color: #f8f9fa;
+            background: linear-gradient(180deg, #add8e6, #98fb98);
+            /* Gradiente de azul claro para verde claro */
             padding-top: 20px;
             box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
         }
@@ -63,14 +64,47 @@
                 /* Ocultar o menu mobile em telas grandes */
             }
         }
+
+        /* Estilo para os itens de menu */
+        .sidebar .nav-item {
+            margin-bottom: 10px;
+            /* Espaçamento entre os itens */
+        }
+
+        .sidebar .nav-link {
+            background-color: rgba(255, 255, 255, 0.8);
+            /* Fundo branco levemente transparente */
+            border-radius: 5px;
+            padding: 10px 15px;
+            transition: background-color 0.3s;
+        }
+
+        .sidebar .nav-link:hover {
+            background-color: rgba(255, 255, 255, 1);
+            /* Cor de fundo totalmente branca no hover */
+        }
+
+        /* Menu de mobile */
+        .mobile-menu .navbar-nav .nav-link {
+            background-color: rgba(255, 255, 255, 0.8);
+            /* Fundo branco levemente transparente */
+            border-radius: 5px;
+            padding: 10px 15px;
+        }
+
+        .mobile-menu .navbar-nav .nav-link:hover {
+            background-color: rgba(255, 255, 255, 1);
+            /* Cor de fundo totalmente branca no hover */
+        }
     </style>
+
 </head>
 
 <body>
     <!-- Menu de Desktop -->
     <nav class="desktop-menu sidebar">
         <div class="container-fluid">
-            <a class="navbar-brand d-block mb-4 text-center" href="{{ url('/') }}">Dashboard</a>
+            <a class="navbar-brand d-block mb-4 text-center" href="{{ url('/') }}">Gerenciamento</a>
             <ul class="navbar-nav flex-column">
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url('/escolas/listar') }}"><i class="fas fa-school"></i> Escolas</a>
@@ -80,10 +114,12 @@
                         Categorias</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url('/produtos/listar') }}"><i class="fas fa-cogs"></i> Produtos</a>
+                    <a class="nav-link" href="{{ url('/produtos/listar') }}"><i class="fas fa-cogs"></i>
+                        Produtos</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url('/baixas/listar') }}"><i class="fa-solid fa-recycle"></i> Baixas</a>
+                    <a class="nav-link" href="{{ url('/baixas/listar') }}"><i class="fa-solid fa-recycle"></i>
+                        Baixas</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url('/relatorios/listar') }}"><i class="fas fa-chart-line"></i>
@@ -111,17 +147,19 @@
                             Escolas</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url('/categorias') }}"><i class="fas fa-th-list"></i>
+                        <a class="nav-link" href="{{ url('/categorias/listar') }}"><i class="fas fa-th-list"></i>
                             Categorias</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url('/produtos') }}"><i class="fas fa-cogs"></i> Produtos</a>
+                        <a class="nav-link" href="{{ url('/produtos/listar') }}"><i class="fas fa-cogs"></i>
+                            Produtos</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url('/baixas') }}"><i class="fa-solid fa-recycle"></i> Baixas</a>
+                        <a class="nav-link" href="{{ url('/baixas/listar') }}"><i class="fa-solid fa-recycle"></i>
+                            Baixas</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url('/relatorios') }}"><i class="fas fa-chart-line"></i>
+                        <a class="nav-link" href="{{ url('/relatorios/listar') }}"><i class="fas fa-chart-line"></i>
                             Relatórios</a>
                     </li>
                     <li class="nav-item">

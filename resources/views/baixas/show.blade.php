@@ -56,9 +56,12 @@
 </div>
 
 
-
 @section('content')
-    <h1 class="h3">Listagem de Baixas do estoque: {{ $estoque->nome_estoque }}</h1>
+    <a href="{{ route('estoques.show', ['escola' => $escola, 'estoque' => $estoque->id]) }}" class="btn btn-sm">
+        <h1 class="h3">Baixas do estoque: {{ $estoque->nome_estoque }}</h1>
+    </a>
+
+
 
     <div class="d-flex justify-content-between align-items-center mt-3">
         <div>
@@ -69,17 +72,23 @@
             <a href="#" class="btn btn-info mt-3" data-bs-toggle="modal" data-bs-target="#filterModal">
                 <i class="fa-solid fa-filter"></i> Filtros
             </a>
+
+            <a href="{{ route('estoques.show', ['escola' => $escola, 'estoque' => $estoque->id]) }}"
+                class="btn btn-success mt-3"><i class="fa-solid fa-boxes-stacked"></i> Estoque
+            </a>
+
+
         </div>
 
         <!-- Card para valor total -->
         <div class="card p-2"
-            style="width: 200px; height: 50px; display: flex; align-items: center; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+            style="min-width: 300px; display: flex; align-items: center; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
             <div class="card-body p-0 d-flex justify-content-between w-100">
                 <div class="text-muted" style="font-size: 0.8rem;">
-                    Valor Total:
+                    Total Baixa:
                 </div>
-                <div class="text-primary" style="font-size: 1rem; font-weight: bold;">
-                    R$ {{ $totalBaixas ?? '0,00' }}
+                <div class="text-danger" style="font-size: 1rem; font-weight: bold;">
+                    -R$ {{ $totalBaixas ?? '0,00' }}
                 </div>
             </div>
         </div>
@@ -92,7 +101,8 @@
             <tr>
                 <th>ID</th>
                 <th>Produto</th>
-                <th>Quantidade Baixa</th>
+                <th>($)Produto</th>
+                <th>Qntd. Baixa</th>
                 <th>Motivo</th>
                 <th>Validade</th>
                 <th>Data do Descarte</th>
@@ -103,6 +113,7 @@
                 <tr>
                     <td>{{ $dado['baixas']['id'] }}</td>
                     <td>{{ $dado['baixas']['nome_produto'] }}</td>
+                    <td>{{ $dado['produtos']['preco_produto'] }}</td>
                     <td>{{ $dado['baixas']['quantidade_descarte'] }}</td>
                     <td>{{ $dado['baixas']['defeito_descarte'] }}</td>
                     <td>{{ $dado['baixas']['validade'] }}</td>

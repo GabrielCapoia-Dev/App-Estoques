@@ -5,11 +5,61 @@ namespace App\Http\Controllers;
 use App\Models\EstoqueProduto;
 use App\Models\DescarteProdutos;
 use App\Models\Estoque;
+use App\Models\Local;
 use App\Models\Produto;
 use Illuminate\Http\Request;
 
 class DescarteProdutoController extends Controller
 {
+
+    /**
+     * Lista todos os valores de todas as escolas.
+     */
+    public function index()
+    {
+        $valorTotalBaixaGeral = 0;
+        $valorTotalEstoqueGeral = 0;
+
+        $resultado = [];
+        $estoqueController = new EstoqueController(); // Certifique-se de que este controller existe e implementa o método necessário
+        $locals = Local::all(); // Obtém todos os locais
+
+        foreach ($locals as $local) {
+            $estoques = Estoque::where('id_local', $local->id)->get();
+
+            foreach ($estoques as $estoque) {
+                $idEstoque = $estoque->id;
+
+                // Obtém os totais de estoque e baixas para cada estoque
+                $totalEstoque = $estoqueController->index($local->id)['totalEstoque'] ?? 0;
+                $totalBaixas = $this->show($local->id, $idEstoque)['totalBaixas'] ?? 0;
+
+                // Converte valores para float
+                $valorEsto = floatval(str_replace(',', '.', $totalEstoque));
+                $valorBai = floatval(str_replace(',', '.', $totalBaixas));
+
+                // Atualiza os totais gerais
+                $valorTotalEstoqueGeral += $valorEsto;
+                $valorTotalBaixaGeral += $valorBai;
+            }
+            // Salva os dados no array de resultados
+            $resultado[] = [
+                'idLocal' => $local->id,
+                'local' => $local->nome_local,
+                'valorTotalEstoque' => $valorEsto,
+                'valorTotalBaixa' => $valorBai,
+            ];
+        }
+
+        // Formatação dos totais gerais
+        $totalBaixaGeralFormatado = number_format($valorTotalBaixaGeral, 2, ',', '.');
+        $totalEstoqueGeralFormatado = number_format($valorTotalEstoqueGeral, 2, ',', '.');
+
+        // Retorna a view com os dados
+        return view('baixas.index', compact('resultado', 'totalBaixaGeralFormatado', 'totalEstoqueGeralFormatado'));
+    }
+
+
 
     /**
      * Exibir todas as baixas de um estoque
@@ -20,6 +70,7 @@ class DescarteProdutoController extends Controller
             $query->wherePivot('quantidade_atual', '>', 0)
                 ->withPivot('id', 'quantidade_atual', 'quantidade_minima', 'quantidade_maxima', 'validade');
         }])->findOrFail($estoqueId);
+
 
         $estoque_produto = EstoqueProduto::where("estoque_id", $estoqueId)->get();
         $estoqueProdutoIds = $estoque_produto->pluck('id');
@@ -53,7 +104,7 @@ class DescarteProdutoController extends Controller
                     'validade' => $estoqueProduto->validade
                         ? \Carbon\Carbon::createFromFormat('Y-m-d', $estoqueProduto->validade)->format('d/m/Y')
                         : 'Sem validade',
-                    'created_at' => $baixa->created_at->format('d/m/Y H:i')
+                    'created_at' => $baixa->created_at->format('d/m/Y')
                 ],
 
                 'produtos' => [
@@ -64,10 +115,10 @@ class DescarteProdutoController extends Controller
             ];
         });
         $totalBaixas = $this->calcularValorTotal($dadosCompletos->toArray());
-
+        $escola = $estoque['id'];
 
         // Retornar os dados para a view
-        return view('baixas.show', compact('dadosCompletos', 'estoque', 'totalBaixas'));
+        return view('baixas.show', compact('dadosCompletos', 'estoque', 'totalBaixas', 'escola'));
     }
 
 
@@ -117,7 +168,7 @@ class DescarteProdutoController extends Controller
                 return \Carbon\Carbon::createFromFormat('d/m/Y', $item['baixas']['validade']) <= \Carbon\Carbon::createFromFormat('Y-m-d', $request->input('validade-Fim'));
             });
         }
-
+        $escola = $estoque['id'];
         $totalBaixas = $this->calcularValorTotal($dadosFiltrados->toArray());
 
         // Retornar a view com os dados filtrados
@@ -125,6 +176,7 @@ class DescarteProdutoController extends Controller
             'dadosCompletos' => $dadosFiltrados,
             'estoque' => $allData['estoque'],
             'totalBaixas' => $totalBaixas,
+            'escola' => $escola
         ]);
     }
 

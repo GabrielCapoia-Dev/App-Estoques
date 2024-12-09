@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Estoque;
 use App\Models\Local;
-use App\Models\Produto;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -22,11 +21,31 @@ class EstoqueController extends Controller
             return redirect()->route('escolas.index')->with('error', 'Local não encontrado');
         }
 
-        // Agora buscamos os estoques relacionados ao local pelo campo id_local
         $estoques = Estoque::where('id_local', $id_local)->get();
 
-        return view('estoques.index', compact('estoques', 'escola'));
+        $valorTotalBaixa = 0;
+        $valorTotalEstoque = 0;
+
+        $baixaController = new DescarteProdutoController();
+
+        foreach ($estoques as $estoque) {
+            $idEstoque = $estoque->id;
+
+            $totalEstoque = $this->show($escola->id, $idEstoque)['totalEstoque'];
+
+            $baixa = $baixaController->show($idEstoque);
+
+            $valorTotalBaixa += floatval(str_replace(',', '.', $baixa['totalBaixas']));
+            $valorTotalEstoque += floatval(str_replace(',', '.', $totalEstoque));
+        }
+        $totalBaixa = number_format($valorTotalBaixa, 2, ',', '.');
+        $totalEstoque = number_format($valorTotalEstoque, 2, ',', '.');
+
+
+
+        return view('estoques.index', compact('estoques', 'escola', 'totalBaixa', 'totalEstoque'));
     }
+
 
     /**
      * Mostra o formulário para criar um novo estoque vinculado a um local
@@ -68,17 +87,34 @@ class EstoqueController extends Controller
     public function show($escolaId, $estoqueId)
     {
         $estoque = Estoque::with(['produtos' => function ($query) {
-            // Filtra produtos com quantidade_atual maior que 0
             $query->wherePivot('quantidade_atual', '>', 0)
                 ->withPivot('id', 'quantidade_atual', 'quantidade_minima', 'quantidade_maxima', 'validade');
         }])->findOrFail($estoqueId);
 
-        $produtos = Produto::all();
+        $totalEstoque = $estoque->produtos->reduce(function ($carry, $produto) {
+            $quantidadeAtual = floatval(str_replace(',', '.', $produto->pivot->quantidade_atual));
+            $preco = floatval(str_replace(',', '.', $produto->preco));
 
+
+            if ($quantidadeAtual > 0 && $preco > 0) {
+                $valorTotalProduto = $quantidadeAtual * $preco;
+
+                $carry += $valorTotalProduto;
+            }
+
+            return $carry;
+        }, 0);
+
+
+        $totalEstoque = number_format($totalEstoque, 2, ',', '.');
+
+        $baixa = new DescarteProdutoController();
+
+        $totalBaixa = $baixa->show($estoqueId)['totalBaixas'];
 
         $escola = $estoque->local;
 
-        return view('estoques.show', compact('estoque', 'escola', 'produtos'));
+        return view('estoques.show', compact('estoque', 'escola', 'totalEstoque', 'totalBaixa'));
     }
 
 

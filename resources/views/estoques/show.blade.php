@@ -61,25 +61,57 @@
 
 
 @section('content')
-    <h1>Detalhes do Estoque: {{ $estoque->nome_estoque }}</h1>
+    <h3>Produtos no Estoque: {{ $estoque->nome_estoque }}</h3>
 
-    <!-- Tabela de produtos no estoque -->
-    <h3>Produtos no Estoque</h3>
+    <div class="d-flex justify-content-between align-items-center mt-3">
+        <div>
+            <a href="{{ route('estoques.index', ['escola' => $estoque->local->id]) }}" class="btn btn-secondary mt-3">
+                <i class="fa-solid fa-arrow-left"></i> Voltar
+            </a>
+            <a href="{{ route('estoques.produtos.create', $estoque->id) }}" class="btn btn-success mt-3">
+                <i class="fa-solid fa-plus"></i> Novo
+            </a>
+            <a href="{{ route('estoques.baixas.show', $estoque->id) }}" class="btn btn-danger mt-3">
+                <i class="fa-solid fa-recycle"></i></i> Baixas
+            </a>
 
-    <!-- Botão para adicionar um novo produto ao estoque -->
-    <a href="{{ route('estoques.produtos.create', $estoque->id) }}" class="btn btn-success mt-3">
-        <i class="fa-solid fa-plus"></i> Novo
-    </a>
+        </div>
+        <!-- Card para valor total -->
+        <div class="card p-2"
+            style="min-width: 300px; display: flex; align-items: center; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+            <div class="card-body p-0 d-flex justify-content-between w-100">
+                <div class="text-muted" style="font-size: 0.8rem;">
+                    Total Estoque:
+                </div>
+                <div class="text-success" style="font-size: 1rem; font-weight: bold;">
+                    R$ {{ $totalEstoque ?? '0,00' }}
+                </div>
+            </div>
+        </div>
+        
+        <a href="{{ route('estoques.baixas.show', $estoque->id) }}" class="btn btn-sm">
+            <div class="card p-2"
+                style="min-width: 300px; display: flex; align-items: center; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+                <div class="card-body p-0 d-flex justify-content-between w-100">
+                    <div class="text-muted" style="font-size: 0.8rem;">
+                        Total Baixa:
+                    </div>
+                    <div class="text-danger" style="font-size: 1rem; font-weight: bold;">
+                        -R$ {{ $totalBaixa ?? '0,00' }}
+                    </div>
+                </div>
+            </div>
+        </a>
 
-    <!-- Botões de navegação -->
-    <a href="{{ route('estoques.index', ['escola' => $estoque->local->id]) }}" class="btn btn-secondary mt-3">
-        <i class="fa-solid fa-arrow-left"></i> Voltar
-    </a>
+    </div>
+
+
 
     <table class="table table-striped">
         <thead>
             <tr>
                 <th>Nome do Produto</th>
+                <th>Preço do Produto</th>
                 <th>Quantidade Atual</th>
                 <th>Validade</th>
                 <th>Ações</th>
@@ -87,17 +119,16 @@
         </thead>
         <tbody>
             @foreach ($estoque->produtos as $produto)
-                <tr class="produto-item" 
-                    data-produto-id="{{ $produto->id }}"  
-                    data-nome="{{ $produto->nome_produto }}"
-                    data-preco="{{ $produto->preco }}" 
-                    data-quantidade-minima="{{ $produto->pivot->quantidade_minima }}"
+                <tr class="produto-item" data-produto-id="{{ $produto->id }}" data-nome="{{ $produto->nome_produto }}"
+                    data-preco="{{ $produto->preco }}" data-quantidade-minima="{{ $produto->pivot->quantidade_minima }}"
                     data-quantidade-maxima="{{ $produto->pivot->quantidade_maxima }}"
                     data-categoria="{{ $produto->categoria->nome_categoria }}"
                     data-quantidade="{{ $produto->pivot->quantidade_atual }}">
                     <td>{{ $produto->nome_produto }}</td>
+                    <td>{{ $produto->preco }}</td>
+
                     <td>{{ $produto->pivot->quantidade_atual }}</td>
-                    <td>{{ $produto->pivot->validade }}</td>
+                    <td>{{ $produto->pivot->validade ?? 'Sem validade' }}</td>
                     <td>
 
                         <!-- Botões para editar e dar baixa no produto -->
