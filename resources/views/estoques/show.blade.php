@@ -41,21 +41,17 @@
                     <div class="mb-3">
                         <label for="defeito_descarte" class="form-label">Motivo*</label>
                         <select class="form-control" id="defeito_descarte" name="defeito_descarte">
-                            <option value="">Selecione o motivo do descarte</option>
+                            <option value="">Selecione o motivo</option>
                             <option value="Utilizado">Utilizado</option>
                             <option value="Vencimento">Vencimento</option>
                             <option value="Improprio para Consumo">Impróprio para consumo</option>
                             <option value="Danificado">Danificado</option>
                         </select>
                     </div>
-                    <div class="mb-3">
-                        <label for="descricao_descarte" class="form-label">Descrição da Baixa</label>
-                        <textarea class="form-control" id="descricao_descarte" name="descricao_descarte"></textarea>
-                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
-                    <button type="submit" class="btn btn-danger">Baixa</button>
+                    <button type="submit" class="btn btn-danger">Dar Baixa</button>
                 </div>
             </form>
 
@@ -115,10 +111,6 @@
                             data-pivotid="{{ $produto->pivot->id }}" class="btn btn-danger btn-sm">
                             <i class="fa-solid fa-recycle"></i>
                         </a>
-
-
-                        <a href="{{ route('historico.produtos.index', ['estoque' => $estoque->id, 'produto' => $produto->id]) }}"
-                            class="btn btn-info btn-sm"><i class="fa-solid fa-clock-rotate-left"></i></a>
                     </td>
                 </tr>
             @endforeach

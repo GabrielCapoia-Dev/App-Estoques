@@ -73,3 +73,38 @@
     color: green;
     font-weight: bold;
 }
+
+.text-primary {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #007bff;
+    /* Cor de destaque azul */
+}
+
+h4 {
+    font-size: 2rem;
+    /* Tamanho da fonte para mais destaque */
+    margin-top: 10px;
+}
+
+.card {
+    background-color: #f8f9fa;
+    /* Cor de fundo suave para o card */
+    border-radius: 15px;
+    /* Arredondar ainda mais as bordas do card */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    /* Sombra suave */
+}
+
+.card-title {
+    font-size: 1.2rem;
+    color: #555;
+    /* Cor mais suave para o título */
+}
+
+.card-text {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #007bff;
+    /* Cor azul do valor */
+}

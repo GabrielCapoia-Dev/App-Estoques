@@ -32,7 +32,7 @@
                             class="btn btn-info btn-sm"><i class="fa-regular fa-eye"></i></a>
                         <a href="{{ route('estoques.edit', ['escola' => $escola->id, 'estoque' => $estoque->id]) }}"
                             class="btn btn-warning btn-sm"><i class="fa-solid fa-pen-to-square"></i></i></a>
-                        <a href="{{ route('estoques.baixas.listar', $estoque->id) }}"
+                        <a href="{{ route('estoques.baixas.show', $estoque->id) }}"
                             class="btn btn-danger btn-sm"><i class="fa-solid fa-recycle"></i></i></a>
                     </td>
 
