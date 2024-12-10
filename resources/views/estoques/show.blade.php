@@ -129,7 +129,7 @@
                     <td>{{ $produto->preco }}</td>
 
                     <td>{{ $produto->pivot->quantidade_atual }}</td>
-                    <td>{{ $produto->pivot->validade ?? 'Sem validade' }}</td>
+                    <td>{{ $produto->pivot->validade ? \Carbon\Carbon::parse($produto->pivot->validade)->format('d-m-Y') : 'Sem validade' }}</td>
                     <td>
 
                         <!-- Botões para editar e dar baixa no produto -->
