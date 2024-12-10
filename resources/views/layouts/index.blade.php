@@ -7,8 +7,6 @@
     <title>Gerenciamento</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
-
-
     <!-- Link para o Font Awesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
     <style>
@@ -96,8 +94,28 @@
             background-color: rgba(255, 255, 255, 1);
             /* Cor de fundo totalmente branca no hover */
         }
-    </style>
 
+        /* Estilos do Rodapé */
+        .footer {
+            background-color: #f8f9fa;
+            padding: 10px 0;
+            text-align: center;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .footer a {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 
 <body>
@@ -178,6 +196,11 @@
         </main>
     </div>
 
+    <!-- Rodapé -->
+    <div class="footer text-center"
+    style="height: 15px; display: flex; align-items: center; justify-content: center; background-color: #f8f9fa; box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1); font-size: 0.8rem;">
+        <p style="margin-top: 20px;">© 2024 Desenvolvido por <a href="https://github.com/GabrielCapoia-Dev" target="_blank">Gabriel Capoia</a></p>
+    </div>
 
     <!-- Script do Bootstrap -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

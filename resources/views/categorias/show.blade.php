@@ -19,7 +19,8 @@
 
     </div>
 
-    <table class="table table-bordered">
+    <table class="table table-striped mt-3">
+
         <thead>
             <tr>
                 <th>Nome do Produto</th>

@@ -3,7 +3,8 @@
 @section('content')
     <h1>Detalhes do Produto: {{ $produto->nome_produto }}</h1>
 
-    <table class="table table-bordered">
+    <table class="table table-striped mt-3">
+
         <tr>
             <th>Nome</th>
             <td>{{ $produto->nome_produto }}</td>

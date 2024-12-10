@@ -47,7 +47,7 @@
         <br>
 
         <!-- Tabela para exibir os resultados -->
-        <table class="table table-bordered">
+        <table class="table table-striped mt-3">
             <thead>
                 <tr>
                     <th>Local</th>
@@ -60,7 +60,7 @@
                     <tr>
                         <td style="transition: background-color 0.3s;">
                             <a href="{{ route('estoques.index', $result['idLocal']) }}"
-                                style="display: block; text-decoration: none; color: black; padding: 10px;">
+                                style="display: block; text-decoration: none; color: black; padding: 4px;">
                                 {{ $result['local'] }}
                             </a>
                         </td>

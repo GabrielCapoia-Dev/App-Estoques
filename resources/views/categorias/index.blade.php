@@ -24,7 +24,8 @@
     </div>
 
     <!-- Tabela para exibir as categorias -->
-    <table class="table table-bordered">
+    <table class="table table-striped mt-3">
+
         <thead>
             <tr>
                 <th>ID</th>

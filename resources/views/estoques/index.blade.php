@@ -58,7 +58,8 @@
     <br>
 
     <!-- Tabela para exibir os estoques -->
-    <table class="table table-bordered">
+    <table class="table table-striped mt-3">
+
         <thead>
             <tr>
                 <th>ID</th>

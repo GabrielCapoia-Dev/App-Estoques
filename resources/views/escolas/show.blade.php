@@ -42,7 +42,8 @@
     </div>
 
     <!-- Tabela para exibir os funcionários -->
-    <table class="table table-bordered">
+    <table class="table table-striped mt-3">
+
         <thead>
             <tr>
                 <th>ID</th>

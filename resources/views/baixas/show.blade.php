@@ -104,7 +104,7 @@
                 <th>ID</th>
                 <th>Produto</th>
                 <th>Valor</th>
-                <th>Qntd. Baixa</th>
+                <th>Qtd. Baixa</th>
                 <th>Motivo</th>
                 <th>Validade</th>
                 <th>Data do Descarte</th>
