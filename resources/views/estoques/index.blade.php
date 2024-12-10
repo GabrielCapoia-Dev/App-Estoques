@@ -1,7 +1,8 @@
 @extends('layouts.index')
 
 @section('content')
-    <h1 class="h2">Estoques da Escola: {{ $escola->nome_local }}</h1>
+    <h1 class="h2">Estoques: {{ $escola->nome_local }}</h1>
+    <h1 class="h4">Status: {{ $estoques->first()->status_estoque ?? 'Inativo' }}</h1>
 
     <div class="d-flex justify-content-between align-items-center mt-3">
         <div>
@@ -11,6 +12,21 @@
             <a href="{{ route('baixas.index') }}" class="btn btn-danger">
                 <i class="fa-solid fa-recycle"></i></i>
                 Baixas</a>
+
+            @if (count($estoques) > 0 && $estoques->first()->status_estoque === 'Ativo')
+                <a href="{{ route('estoques.index', ['escola' => $escola->id, 'status_estoque' => 'Inativo']) }}"
+                    class="btn btn-secondary">
+                    <i class="fa-regular fa-eye-slash"></i>
+                </a>
+            @endif
+
+            @if (count($estoques) == 0 || (count($estoques) > 0 && $estoques->first()->status_estoque === 'Inativo'))
+                <a href="{{ route('estoques.index', ['escola' => $escola->id, 'status_estoque' => 'Ativo']) }}"
+                    class="btn btn-secondary">
+                    <i class="fa-regular fa-eye"></i>
+                </a>
+            @endif
+
 
         </div>
         <!-- Card para valor total -->
@@ -61,12 +77,21 @@
                     <td>{{ $estoque->status_estoque }}</td>
                     <td>{{ $estoque->descricao_estoque }}</td>
                     <td>
-                        <a href="{{ route('estoques.show', ['escola' => $escola->id, 'estoque' => $estoque->id]) }}"
-                            class="btn btn-info btn-sm"><i class="fa-regular fa-eye"></i></a>
+
+                        @if ($estoque->status_estoque === 'Ativo')
+                            <a href="{{ route('estoques.show', ['escola' => $escola->id, 'estoque' => $estoque->id]) }}"
+                                class="btn btn-info btn-sm"><i class="fa-regular fa-eye"></i></a>
+                        @endif
                         <a href="{{ route('estoques.edit', ['escola' => $escola->id, 'estoque' => $estoque->id]) }}"
                             class="btn btn-warning btn-sm"><i class="fa-solid fa-pen-to-square"></i></i></a>
-                        <a href="{{ route('estoques.baixas.show', $estoque->id) }}" class="btn btn-danger btn-sm">
-                            <i class="fa-solid fa-recycle"></i></i></a>
+
+                        @if ($estoque->status_estoque === 'Ativo')
+                            <a href="{{ route('estoques.baixas.show', $estoque->id) }}" class="btn btn-danger btn-sm">
+                                <i class="fa-solid fa-recycle"></i></i></a>
+                        @endif
+
+
+
                     </td>
 
                 </tr>

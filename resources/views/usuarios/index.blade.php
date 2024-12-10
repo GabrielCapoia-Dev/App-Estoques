@@ -1,7 +1,7 @@
 @extends('layouts.index')
 
 @section('content')
-    <h1>Usuários</h1>
+<h1 class="h2">Usuários: {{ $usuarios->first()->status_usuario ?? 'Inativo' }}</h1>
 
     <div class="mb-3">
         <a href="{{ route('usuarios.create') }}" class="btn btn-success"><i class="fa-solid fa-plus"></i> Novo</a>

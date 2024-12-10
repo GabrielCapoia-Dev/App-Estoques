@@ -11,40 +11,56 @@ class EstoqueController extends Controller
 {
 
     /**
-     * Lista os estoques de um local específico
+     * Lista os estoques de um local específico com base no status.
      */
-    public function index($id_local)
+    public function index(Request $request, $id_local)
     {
+        // Verifica se o local existe
         $escola = Local::find($id_local);
+
 
         if (!$escola) {
             return redirect()->route('escolas.index')->with('error', 'Local não encontrado');
         }
 
-        $estoques = Estoque::where('id_local', $id_local)->get();
+        $status = $request->get('status_estoque', 'Ativo');
+
+        if ($status === 'Inativo') {
+            $estoques = Estoque::where('id_local', $id_local)->where('status_estoque', 'Inativo')->get();
+        } else {
+            $estoques = Estoque::where('id_local', $id_local)->where('status_estoque', 'Ativo')->get();
+        }
+
+
+
 
         $valorTotalBaixa = 0;
         $valorTotalEstoque = 0;
 
         $baixaController = new DescarteProdutoController();
 
+        // Calcula os totais para estoques filtrados
         foreach ($estoques as $estoque) {
             $idEstoque = $estoque->id;
 
+            // Obtém o total de estoque
             $totalEstoque = $this->show($escola->id, $idEstoque)['totalEstoque'];
 
+            // Obtém o total de baixas
             $baixa = $baixaController->show($idEstoque);
 
-            $valorTotalBaixa += floatval(str_replace(',', '.', $baixa['totalBaixas']));
-            $valorTotalEstoque += floatval(str_replace(',', '.', $totalEstoque));
+            $valorTotalBaixa += floatval(str_replace(',', '.', str_replace('.', '', $baixa['totalBaixas'] ?? '0')));
+            $valorTotalEstoque += floatval(str_replace(',', '.', str_replace('.', '', $totalEstoque ?? '0')));
         }
+
+        // Formata os valores finais para exibição
         $totalBaixa = number_format($valorTotalBaixa, 2, ',', '.');
         $totalEstoque = number_format($valorTotalEstoque, 2, ',', '.');
 
-
-
+        // Retorna a view com os dados filtrados
         return view('estoques.index', compact('estoques', 'escola', 'totalBaixa', 'totalEstoque'));
     }
+
 
 
     /**

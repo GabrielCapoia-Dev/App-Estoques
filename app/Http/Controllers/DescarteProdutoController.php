@@ -20,39 +20,33 @@ class DescarteProdutoController extends Controller
         $valorTotalBaixaGeral = 0;
         $valorTotalEstoqueGeral = 0;
 
+
         $resultado = [];
-        $estoqueController = new EstoqueController(); // Certifique-se de que este controller existe e implementa o método necessário
-        $locals = Local::all(); // Obtém todos os locais
+        $estoqueController = new EstoqueController();
+        $locals = Local::all();
 
         foreach ($locals as $local) {
-            $estoques = Estoque::where('id_local', $local->id)->get();
 
-            foreach ($estoques as $estoque) {
-                $idEstoque = $estoque->id;
+            $requestMock = Request::create('', 'GET', ['status_estoque' => 'Ativo']);
 
-                // Obtém os totais de estoque e baixas para cada estoque
-                $totalEstoque = $estoqueController->index($local->id)['totalEstoque'] ?? 0;
-                $totalBaixas = $this->show($local->id, $idEstoque)['totalBaixas'] ?? 0;
+            $totalEstoque = floatval(str_replace(',', '.', str_replace('.', '', $estoqueController->index($requestMock, $local->id)['totalEstoque'] ?? '0')));
+            $totalBaixas = floatval(str_replace(',', '.', str_replace('.', '', $estoqueController->index($requestMock, $local->id)['totalBaixa'] ?? '0')));
 
-                // Converte valores para float
-                $valorEsto = floatval(str_replace(',', '.', $totalEstoque));
-                $valorBai = floatval(str_replace(',', '.', $totalBaixas));
 
-                // Atualiza os totais gerais
-                $valorTotalEstoqueGeral += $valorEsto;
-                $valorTotalBaixaGeral += $valorBai;
-            }
-            // Salva os dados no array de resultados
+            $valorTotalBaixaGeral += $totalBaixas;
+            $valorTotalEstoqueGeral += $totalEstoque;
+
             $resultado[] = [
                 'idLocal' => $local->id,
                 'local' => $local->nome_local,
-                'valorTotalEstoque' => $valorEsto,
-                'valorTotalBaixa' => $valorBai,
+                'valorTotalEstoque' => $totalEstoque,
+                'valorTotalBaixa' => $totalBaixas,
             ];
         }
 
         // Formatação dos totais gerais
         $totalBaixaGeralFormatado = number_format($valorTotalBaixaGeral, 2, ',', '.');
+
         $totalEstoqueGeralFormatado = number_format($valorTotalEstoqueGeral, 2, ',', '.');
 
         // Retorna a view com os dados

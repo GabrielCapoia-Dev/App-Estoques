@@ -11,9 +11,15 @@ class CategoriaController extends Controller
     /**
      * Listar todas as categorias
      */
-    public function index()
+    public function index(Request $request)
     {
-        $categorias = Categoria::all();
+
+        if ($request->has('mostrar_inativos') && $request->mostrar_inativos == 'true') {
+            $categorias = Categoria::where('status_categoria', 'Inativo')->get();
+        } else {
+            $categorias = Categoria::where('status_categoria', 'Ativo')->get();
+        }
+
 
         return view('categorias.index', compact('categorias'));
     }

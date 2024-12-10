@@ -13,9 +13,9 @@
         <!-- Cards de totais gerais -->
         <div class="d-flex justify-content-between align-items-center mt-3">
 
-            {{-- <div>
-                <a href="" class="btn btn-success"><i class="fa-solid fa-plus"></i> Novo</a>
-            </div> --}}
+            <div>
+                <a href="" class="btn btn-secondary"><i class="fa-solid fa-file-arrow-down"></i></a>
+            </div>
 
             <!-- Card para valor total -->
             <div class="card p-2"
@@ -64,8 +64,6 @@
                                 {{ $result['local'] }}
                             </a>
                         </td>
-
-
 
                         <td class="text-success">R$ {{ number_format($result['valorTotalEstoque'], 2, ',', '.') }}</td>
                         <td class="text-danger">-R$ {{ number_format($result['valorTotalBaixa'], 2, ',', '.') }}</td>

@@ -34,6 +34,14 @@
                 value="{{ old('preco', $produto->preco) }}" required>
         </div>
 
+        <div class="mb-3">
+            <label for="status_produto" class="form-label">Status</label>
+            <select class="form-control" id="status_produto" name="status_produto" required>
+                <option value="Ativo" {{ $produto->status_produto == 'Ativo' ? 'selected' : '' }}>Ativo</option>
+                <option value="Inativo" {{ $produto->status_produto == 'Inativo' ? 'selected' : '' }}>Inativo</option>
+            </select>
+        </div>
+
         <br>
         <button type="submit" class="btn btn-warning"><i class="fa-solid fa-pen-to-square"></i> Editar</button>
         <a href="{{ route('produtos.index') }}" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> Voltar</a>

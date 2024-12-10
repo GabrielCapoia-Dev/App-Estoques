@@ -7,13 +7,19 @@
     <!-- Tabela de produtos da categoria -->
     <h3>Produtos na Categoria</h3>
 
-    <!-- Botão para adicionar um novo produto à categoria -->
-    <a href="{{ route('categorias.produtos.create', $categoria->id) }}" class="btn btn-success mt-3"><i class="fa-solid fa-plus"></i> Novo</a>
+    <div class="mb-3">
+        
+        <!-- Botão para adicionar um novo produto à categoria -->
+        <a href="{{ route('categorias.produtos.create', $categoria->id) }}" class="btn btn-success mt-3"><i
+                class="fa-solid fa-plus"></i> Novo</a>
 
-    <!-- Botões de navegação -->
-    <a href="{{ route('categorias.index') }}" class="btn btn-secondary mt-3"><i class="fa-solid fa-arrow-left"></i> Voltar</a>
+        <!-- Botões de navegação -->
+        <a href="{{ route('categorias.index') }}" class="btn btn-secondary mt-3"><i class="fa-solid fa-arrow-left"></i>
+            Voltar</a>
 
-    <table class="table table-striped">
+    </div>
+
+    <table class="table table-bordered">
         <thead>
             <tr>
                 <th>Nome do Produto</th>

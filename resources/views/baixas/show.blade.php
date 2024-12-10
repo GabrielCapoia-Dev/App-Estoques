@@ -85,6 +85,7 @@
             style="min-width: 300px; display: flex; align-items: center; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
             <div class="card-body p-0 d-flex justify-content-between w-100">
                 <div class="text-muted" style="font-size: 0.8rem;">
+                    <a href="" class="btn btn-secondary"><i class="fa-solid fa-file-arrow-down"></i></a>
                     Total Baixa:
                 </div>
                 <div class="text-danger" style="font-size: 1rem; font-weight: bold;">
@@ -92,6 +93,7 @@
                 </div>
             </div>
         </div>
+
     </div>
 
 
@@ -101,7 +103,7 @@
             <tr>
                 <th>ID</th>
                 <th>Produto</th>
-                <th>($)Produto</th>
+                <th>Valor</th>
                 <th>Qntd. Baixa</th>
                 <th>Motivo</th>
                 <th>Validade</th>
@@ -113,7 +115,7 @@
                 <tr>
                     <td>{{ $dado['baixas']['id'] }}</td>
                     <td>{{ $dado['baixas']['nome_produto'] }}</td>
-                    <td>{{ $dado['produtos']['preco_produto'] }}</td>
+                    <td>R${{ $dado['produtos']['preco_produto'] }}</td>
                     <td>{{ $dado['baixas']['quantidade_descarte'] }}</td>
                     <td>{{ $dado['baixas']['defeito_descarte'] }}</td>
                     <td>{{ $dado['baixas']['validade'] }}</td>

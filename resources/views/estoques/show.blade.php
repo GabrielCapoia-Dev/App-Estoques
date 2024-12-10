@@ -75,6 +75,7 @@
                 <i class="fa-solid fa-recycle"></i></i> Baixas
             </a>
 
+
         </div>
         <!-- Card para valor total -->
         <div class="card p-2"
@@ -88,7 +89,7 @@
                 </div>
             </div>
         </div>
-        
+
         <a href="{{ route('estoques.baixas.show', $estoque->id) }}" class="btn btn-sm">
             <div class="card p-2"
                 style="min-width: 300px; display: flex; align-items: center; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
@@ -110,9 +111,9 @@
     <table class="table table-striped">
         <thead>
             <tr>
-                <th>Nome do Produto</th>
-                <th>Preço do Produto</th>
-                <th>Quantidade Atual</th>
+                <th>Produto</th>
+                <th>Valor</th>
+                <th>Qtd. Atual</th>
                 <th>Validade</th>
                 <th>Ações</th>
             </tr>

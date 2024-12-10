@@ -7,6 +7,7 @@ use App\Http\Controllers\EstoqueProdutoController;
 use App\Http\Controllers\HistoricoProdutoController;
 use App\Http\Controllers\LocalController;
 use App\Http\Controllers\ProdutoController;
+use App\Http\Controllers\RelatorioController;
 use App\Http\Controllers\UsuarioController;
 use App\Models\HistoricoProduto;
 use Illuminate\Support\Facades\Route;
@@ -81,4 +82,7 @@ Route::prefix('estoques/{estoque}/baixas')->name('estoques.baixas.')->group(func
 
 Route::prefix('baixas')->name('baixas.')->group(function () {
     Route::get('/listar', [DescarteProdutoController::class, 'index'])->name('index');
+});
+Route::prefix('relatorios')->name('relatorios.')->group(function () {
+    Route::get('/listar', [RelatorioController::class, 'index'])->name('index');
 });

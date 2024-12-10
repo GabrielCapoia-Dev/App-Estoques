@@ -15,9 +15,14 @@ class ProdutoController extends Controller
     /**
      * Exibir todos os produtos
      */
-    public function index()
+    public function index(Request $request)
     {
-        $produtos = Produto::all();
+        if ($request->has('mostrar_inativos') && $request->mostrar_inativos == 'true') {
+            $produtos = Produto::where('status_produto', 'Inativo')->get();
+        } else {
+            $produtos = Produto::where('status_produto', 'Ativo')->get();
+        }
+
         return view('produtos.index', compact('produtos'));
     }
 
