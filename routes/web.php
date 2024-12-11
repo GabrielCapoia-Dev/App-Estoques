@@ -6,11 +6,22 @@ use App\Http\Controllers\DescarteProdutoController;
 use App\Http\Controllers\EstoqueProdutoController;
 use App\Http\Controllers\HistoricoProdutoController;
 use App\Http\Controllers\LocalController;
+use App\Http\Controllers\LoginController;
 use App\Http\Controllers\ProdutoController;
 use App\Http\Controllers\RelatorioController;
 use App\Http\Controllers\UsuarioController;
 use App\Models\HistoricoProduto;
 use Illuminate\Support\Facades\Route;
+
+Route::get('/login', function () {
+    return view('login.index');
+})->name('login');
+
+Route::post('/login', [LoginController::class, 'login']);
+Route::get('/logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
+
+
+
 
 Route::prefix('usuarios')->name('usuarios.')->group(function () {
     Route::get('/listar', [UsuarioController::class, 'index'])->name('index');
