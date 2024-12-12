@@ -17,11 +17,6 @@ Route::get('/login', function () {
     return view('login.index');
 })->name('login');
 
-Route::post('/login', [LoginController::class, 'login']);
-Route::get('/logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
-
-
-
 
 Route::prefix('usuarios')->name('usuarios.')->group(function () {
     Route::get('/listar', [UsuarioController::class, 'index'])->name('index');

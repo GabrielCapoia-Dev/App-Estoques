@@ -1,9 +1,12 @@
+
+
+
 @extends('layouts.app')
 
 @section('sidebar')
     <div class="login-container">
         <h2 class="text-center mb-4">Login</h2>
-        <form method="POST" action="{{ route('login') }}">
+        <form method="POST" action="#">
             @csrf
             <div class="form-group">
                 <label for="email_usuario">Email</label>
