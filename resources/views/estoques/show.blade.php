@@ -61,6 +61,7 @@
 
 
 @section('content')
+
     <h3>Produtos no Estoque: {{ $estoque->nome_estoque }}</h3>
 
     <div class="d-flex justify-content-between align-items-center mt-3">
@@ -72,7 +73,7 @@
                 <i class="fa-solid fa-plus"></i> Novo
             </a>
             <a href="{{ route('estoques.baixas.show', $estoque->id) }}" class="btn btn-danger mt-3">
-                <i class="fa-solid fa-recycle"></i></i> Baixas
+                <i class="fa-solid fa-recycle"></i> Baixas
             </a>
 
 

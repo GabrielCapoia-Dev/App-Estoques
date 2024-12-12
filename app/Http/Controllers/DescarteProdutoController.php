@@ -8,6 +8,9 @@ use App\Models\Estoque;
 use App\Models\Local;
 use App\Models\Produto;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Response;
+use NunoMaduro\Collision\Writer;
+use SplTempFileObject;
 
 class DescarteProdutoController extends Controller
 {
@@ -50,9 +53,86 @@ class DescarteProdutoController extends Controller
         $totalEstoqueGeralFormatado = number_format($valorTotalEstoqueGeral, 2, ',', '.');
 
         // Retorna a view com os dados
-        return view('baixas.index', compact('resultado', 'totalBaixaGeralFormatado', 'totalEstoqueGeralFormatado'));
+        return view('baixas.index', compact('locals', 'resultado', 'totalBaixaGeralFormatado', 'totalEstoqueGeralFormatado'));
     }
 
+
+
+    /**
+     * Gerar download do relatório chamando o metodo de conversão
+     * no formato do arquivo
+     */
+    public function download(Request $request)
+    {
+        $valorTotalBaixaGeral = 0;
+        $valorTotalEstoqueGeral = 0;
+        $resultado = [];
+        $estoqueController = new EstoqueController();
+
+        $locals = $request->has('todos') ? Local::all() : Local::whereIn('id', $request->input('escolas'))->get();
+
+        foreach ($locals as $local) {
+            $requestMock = Request::create('', 'GET', ['status_estoque' => 'Ativo']);
+
+            $totalEstoque = floatval(str_replace(',', '.', str_replace('.', '', $estoqueController->index($requestMock, $local->id)['totalEstoque'] ?? '0')));
+            $totalBaixas = floatval(str_replace(',', '.', str_replace('.', '', $estoqueController->index($requestMock, $local->id)['totalBaixa'] ?? '0')));
+
+            $valorTotalBaixaGeral += $totalBaixas;
+            $valorTotalEstoqueGeral += $totalEstoque;
+
+            $resultado[] = [
+                'idLocal' => $local->id,
+                'local' => $local->nome_local,
+                'valorTotalEstoque' => $totalEstoque,
+                'valorTotalBaixa' => $totalBaixas,
+            ];
+        }
+
+        if ($request->has('formato') && in_array('csv', $request->input('formato'))) {
+            return $this->downloadCsv($resultado, $request->has('todos'));
+        }
+
+        return redirect()->back()->with('error', 'Selecione um formato de download.');
+    }
+
+
+    /**
+     * Gera e faz o download do relatório de baixas em formato CSV.
+     */
+    public function downloadCsv($resultado, $todos)
+    {
+        $csvContent = "Local;Valor Total Estoque;Valor Total Baixa\n";
+
+        $totalEstoqueGeral = 0;
+        $totalBaixaGeral = 0;
+
+        foreach ($resultado as $row) {
+            $valorEstoque = $row['valorTotalEstoque'];
+            $valorBaixa = $row['valorTotalBaixa'];
+
+            $totalEstoqueGeral += $valorEstoque;
+            $totalBaixaGeral += $valorBaixa;
+
+            $csvContent .= implode(';', [
+                $row['local'],
+                'R$ ' . number_format($valorEstoque, 2, ',', '.'),
+                'R$ ' . number_format($valorBaixa, 2, ',', '.')
+            ]) . "\n";
+        }
+
+        $csvContent .= implode(';', [
+            'TOTAL',
+            'R$ ' . number_format($totalEstoqueGeral, 2, ',', '.'),
+            'R$ ' . number_format($totalBaixaGeral, 2, ',', '.')
+        ]) . "\n";
+
+        $nomeArquivo = $todos ? 'relatorio-todas-as-escolas.csv' : (isset($resultado[0]) ? $resultado[0]['local'] . '_relatorio.csv' : 'relatorio_baixas.csv');
+
+        return Response::make($csvContent, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="' . $nomeArquivo . '"',
+        ]);
+    }
 
 
     /**
@@ -71,22 +151,17 @@ class DescarteProdutoController extends Controller
         $produtosIds = $estoque_produto->pluck('produto_id');
         $produtos = Produto::whereIn('id', $produtosIds)->get();
 
-        // Consultar as baixas
         $baixas = DescarteProdutos::with('produto')
             ->whereIn('id_estoque_produto', $estoqueProdutoIds)
             ->orderBy('created_at', 'desc')
             ->get();
 
-        // Mapear as baixas com os dados completos
         $dadosCompletos = $baixas->map(function ($baixa) use ($produtos, $estoque_produto) {
-            // Encontrar o estoqueProduto relacionado à baixa
             $estoqueProduto = $estoque_produto->firstWhere('id', $baixa->id_estoque_produto);
 
-            // Encontrar o produto relacionado ao estoqueProduto
             $produto = $produtos->firstWhere('id', $estoqueProduto->produto_id);
 
 
-            // Adicionar dados da baixa no array
             return [
                 'baixas' => [
                     'id' => $baixa->id,
@@ -111,7 +186,6 @@ class DescarteProdutoController extends Controller
         $totalBaixas = $this->calcularValorTotal($dadosCompletos->toArray());
         $escola = $estoque['id'];
 
-        // Retornar os dados para a view
         return view('baixas.show', compact('dadosCompletos', 'estoque', 'totalBaixas', 'escola'));
     }
 
@@ -122,50 +196,42 @@ class DescarteProdutoController extends Controller
      */
     public function filtrarBaixas(Request $request, $estoqueId)
     {
-        // Encontrar o estoque
         $estoque = Estoque::find($estoqueId);
 
         if (!$estoque) {
             return redirect()->route('estoques.index')->with('error', 'Estoque não encontrado.');
         }
 
-        // Validação dos filtros
         $request->validate([
             'defeito_descarte' => 'nullable|string',
             'validade-Inicio' => 'nullable|date',
             'validade-Fim' => 'nullable|date|after_or_equal:validade-Inicio',
         ]);
 
-        // Obter todos os dados do método show
-        $allData = $this->show($estoqueId, true); // Usamos `true` para indicar que queremos os dados, não a view.
+        $allData = $this->show($estoqueId, true);
 
-        // Aplicar os filtros
         $dadosFiltrados = collect($allData['dadosCompletos']);
 
         if ($request->filled('defeito_descarte')) {
             $dadosFiltrados = $dadosFiltrados->filter(function ($item) use ($request) {
-                // Verifica se o defeito_descarte está no array de 'baixas'
                 return stripos($item['baixas']['defeito_descarte'], $request->input('defeito_descarte')) !== false;
             });
         }
 
         if ($request->filled('validade-Inicio')) {
             $dadosFiltrados = $dadosFiltrados->filter(function ($item) use ($request) {
-                // Comparar a data de validade dentro do array 'baixas'
                 return \Carbon\Carbon::createFromFormat('d/m/Y', $item['baixas']['validade']) >= \Carbon\Carbon::createFromFormat('Y-m-d', $request->input('validade-Inicio'));
             });
         }
 
         if ($request->filled('validade-Fim')) {
             $dadosFiltrados = $dadosFiltrados->filter(function ($item) use ($request) {
-                // Comparar a data de validade dentro do array 'baixas'
                 return \Carbon\Carbon::createFromFormat('d/m/Y', $item['baixas']['validade']) <= \Carbon\Carbon::createFromFormat('Y-m-d', $request->input('validade-Fim'));
             });
         }
         $escola = $estoque['id'];
         $totalBaixas = $this->calcularValorTotal($dadosFiltrados->toArray());
 
-        // Retornar a view com os dados filtrados
         return view('baixas.show', [
             'dadosCompletos' => $dadosFiltrados,
             'estoque' => $allData['estoque'],
@@ -176,24 +242,20 @@ class DescarteProdutoController extends Controller
 
 
 
-
+    /**
+     * Calcular valor total de descarte
+     */
     public function calcularValorTotal(array $dadosCompletos)
     {
         $valorTotal = 0;
 
-        // Iterar sobre os dados completos
         foreach ($dadosCompletos as $dado) {
-            // Somar a quantidade de descarte do produto (garantindo que seja um número)
             $quantidadeDescarte = floatval($dado['produtos']['quantidade_descarte']);
 
-            // Obter o preço do produto (garantindo que seja um número)
-            $precoProduto = floatval(str_replace(',', '.', $dado['produtos']['preco_produto'])); // Garantir que seja interpretado corretamente
-
-            // Calcular o valor total de cada item
+            $precoProduto = floatval(str_replace(',', '.', $dado['produtos']['preco_produto']));
             $valorTotal += $quantidadeDescarte * $precoProduto;
         }
 
-        // Formatando o valor total para exibição
         $totalBaixas = number_format($valorTotal, 2, ',', '.');
 
         return $totalBaixas;

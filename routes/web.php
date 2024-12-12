@@ -88,6 +88,7 @@ Route::prefix('estoques/{estoque}/baixas')->name('estoques.baixas.')->group(func
 
 Route::prefix('baixas')->name('baixas.')->group(function () {
     Route::get('/listar', [DescarteProdutoController::class, 'index'])->name('index');
+    Route::get('/download', [DescarteProdutoController::class, 'download'])->name('download');
 });
 Route::prefix('relatorios')->name('relatorios.')->group(function () {
     Route::get('/listar', [RelatorioController::class, 'index'])->name('index');

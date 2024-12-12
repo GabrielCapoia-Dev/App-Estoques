@@ -28,8 +28,6 @@ class EstoqueProdutoController extends Controller
         return view('estoques.produtos.create', compact('estoque', 'produtos', 'produtosEstoque'));
     }
 
-
-
     public function store(Request $request, $estoqueId)
     {
         $request->validate([
@@ -52,7 +50,6 @@ class EstoqueProdutoController extends Controller
         return redirect()->route('estoques.show', ['escola' => $estoque->local->id, 'estoque' => $estoque->id])
             ->with('success', 'Produto adicionado ao estoque com sucesso!');
     }
-
 
     public function edit($estoqueId, $pivotId)
     {
