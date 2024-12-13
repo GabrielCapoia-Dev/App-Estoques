@@ -60,27 +60,54 @@
 </div>
 
 
-@section('content')
+<!-- Modal para selecionar as datas -->
+<div class="modal" tabindex="-1" id="calendarModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Selecione o Período</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <label for="startDate">Data de Início:</label>
+                <input type="date" id="startDate" class="form-control" />
 
+                <label for="endDate" class="mt-3">Data de Fim:</label>
+                <input type="date" id="endDate" class="form-control" />
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                <button type="button" class="btn btn-primary" id="applyFilter">Aplicar Filtro</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section('content')
     <h3>Produtos no Estoque: {{ $estoque->nome_estoque }}</h3>
 
     <div class="d-flex justify-content-between align-items-center mt-3">
         <div>
-            <a href="{{ route('estoques.index', ['escola' => $estoque->local->id]) }}" class="btn btn-secondary mt-3">
-                <i class="fa-solid fa-arrow-left"></i> Voltar
-            </a>
-            <a href="{{ route('estoques.produtos.create', $estoque->id) }}" class="btn btn-success mt-3">
-                <i class="fa-solid fa-plus"></i> Novo
-            </a>
-            <a href="{{ route('estoques.baixas.show', $estoque->id) }}" class="btn btn-danger mt-3">
-                <i class="fa-solid fa-recycle"></i> Baixas
-            </a>
+            <a href="{{ route('estoques.index', ['escola' => $estoque->local->id]) }}" class="btn btn-secondary">
+                <i class="fa-solid fa-arrow-left"></i>
+                Voltar</a>
+            <a href="{{ route('estoques.produtos.create', $estoque->id) }}" class="btn btn-success"><i
+                    class="fa-solid fa-plus"></i>
+                Novo</a>
+            <a href="{{ route('estoques.baixas.show', $estoque->id) }}" class="btn btn-danger">
+                <i class="fa-solid fa-recycle"></i></i>
+                Baixas</a>
 
+            <a href="#" class="btn btn-info" id="openCalendar"><i class="fa-solid fa-filter"></i> Filtrar</a>
 
         </div>
+
+
         <!-- Card para valor total -->
         <div class="card p-2"
-            style="min-width: 300px; display: flex; align-items: center; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+            style="min-width: 250px; display: flex; align-items: center; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
             <div class="card-body p-0 d-flex justify-content-between w-100">
                 <div class="text-muted" style="font-size: 0.8rem;">
                     Total Estoque:
@@ -91,9 +118,10 @@
             </div>
         </div>
 
+
         <a href="{{ route('estoques.baixas.show', $estoque->id) }}" class="btn btn-sm">
             <div class="card p-2"
-                style="min-width: 300px; display: flex; align-items: center; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+                style="min-width: 250px; display: flex; align-items: center; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
                 <div class="card-body p-0 d-flex justify-content-between w-100">
                     <div class="text-muted" style="font-size: 0.8rem;">
                         Total Baixa:
@@ -113,6 +141,7 @@
 
         <thead>
             <tr>
+                <th>ID</th>
                 <th>Produto</th>
                 <th>Valor</th>
                 <th>Qtd. Atual</th>
@@ -127,11 +156,13 @@
                     data-quantidade-maxima="{{ $produto->pivot->quantidade_maxima }}"
                     data-categoria="{{ $produto->categoria->nome_categoria }}"
                     data-quantidade="{{ $produto->pivot->quantidade_atual }}">
+                    <td>{{ $produto->pivot->id }}</td>
                     <td>{{ $produto->nome_produto }}</td>
                     <td>{{ $produto->preco }}</td>
 
                     <td>{{ $produto->pivot->quantidade_atual }}</td>
-                    <td>{{ $produto->pivot->validade ? \Carbon\Carbon::parse($produto->pivot->validade)->format('d-m-Y') : 'Sem validade' }}</td>
+                    <td>{{ $produto->pivot->validade ? \Carbon\Carbon::parse($produto->pivot->validade)->format('d-m-Y') : 'Sem validade' }}
+                    </td>
                     <td>
 
                         <!-- Botões para editar e dar baixa no produto -->
@@ -154,6 +185,39 @@
 
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" defer></script>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const openCalendarButton = document.getElementById('openCalendar');
+        const calendarModal = new bootstrap.Modal(document.getElementById('calendarModal'));
+        const applyFilterButton = document.getElementById('applyFilter');
+
+        // Abre o modal quando o botão de filtro for clicado
+        openCalendarButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            calendarModal.show(); // Exibe o modal
+        });
+
+        // Ação ao aplicar o filtro
+        applyFilterButton.addEventListener('click', function() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            if (startDate && endDate) {
+                // Envia os parâmetros de data na URL
+                window.location.href =
+                    `{{ route('estoques.show', ['escola' => $escola->id, 'estoque' => $estoque->id]) }}?data_inicio=${startDate}&data_fim=${endDate}`;
+            } else {
+                alert('Por favor, selecione ambas as datas.');
+            }
+
+            // Fecha o modal após aplicar o filtro
+            calendarModal.hide();
+        });
+    });
+</script>
+
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {

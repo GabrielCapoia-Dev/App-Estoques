@@ -28,14 +28,14 @@
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="validade-Inicio" class="form-label">Início</label>
-                                <input type="date" class="form-control" id="validade-Inicio" name="validade-Inicio">
+                                <label for="data-inicio" class="form-label">Início</label>
+                                <input type="date" class="form-control" id="data-inicio" name="data-inicio">
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label for="validade-Fim" class="form-label">Fim</label>
-                                <input type="date" class="form-control" id="validade-Fim" name="validade-Fim">
+                                <label for="data-fim" class="form-label">Fim</label>
+                                <input type="date" class="form-control" id="data-fim" name="data-fim">
                             </div>
                         </div>
                     </div>
@@ -85,7 +85,7 @@
             style="min-width: 300px; display: flex; align-items: center; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
             <div class="card-body p-0 d-flex justify-content-between w-100">
                 <div class="text-muted" style="font-size: 0.8rem;">
-                    <a href="" class="btn btn-secondary"><i class="fa-solid fa-file-arrow-down"></i></a>
+                    <a href="{{ route('baixas.download.individual', ['idEscola' => $escola, 'idEstoque' => $estoque->id]) }}" class="btn btn-secondary"><i class="fa-solid fa-file-arrow-down"></i></a>
                     Total Baixa:
                 </div>
                 <div class="text-danger" style="font-size: 1rem; font-weight: bold;">

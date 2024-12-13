@@ -24,15 +24,15 @@ class EstoqueController extends Controller
         }
 
         $status = $request->get('status_estoque', 'Ativo');
+        $dataInicio = $request->get('data_inicio');
+        $dataFim = $request->get('data_fim');
+
 
         if ($status === 'Inativo') {
             $estoques = Estoque::where('id_local', $id_local)->where('status_estoque', 'Inativo')->get();
         } else {
             $estoques = Estoque::where('id_local', $id_local)->where('status_estoque', 'Ativo')->get();
         }
-
-
-
 
         $valorTotalBaixa = 0;
         $valorTotalEstoque = 0;
@@ -44,10 +44,10 @@ class EstoqueController extends Controller
             $idEstoque = $estoque->id;
 
             // Obtém o total de estoque
-            $totalEstoque = $this->show($escola->id, $idEstoque)['totalEstoque'];
+            $totalEstoque = $this->show($request,$escola->id, $idEstoque)['totalEstoque'];
 
             // Obtém o total de baixas
-            $baixa = $baixaController->show($idEstoque);
+            $baixa = $baixaController->show($idEstoque, $dataInicio, $dataFim);
 
             $valorTotalBaixa += floatval(str_replace(',', '.', str_replace('.', '', $baixa['totalBaixas'] ?? '0')));
             $valorTotalEstoque += floatval(str_replace(',', '.', str_replace('.', '', $totalEstoque ?? '0')));
@@ -100,39 +100,50 @@ class EstoqueController extends Controller
     /**
      * Exibe detalhes de um estoque específico vinculado a um local
      */
-    public function show($escolaId, $estoqueId)
+    public function show(Request $request, $escolaId, $estoqueId)
     {
-        $estoque = Estoque::with(['produtos' => function ($query) {
+
+        $dataInicio = $request->data_inicio;
+        $dataFim = $request->data_fim;
+
+        $estoque = Estoque::with(['produtos' => function ($query) use ($dataInicio, $dataFim) {
+            // Filtro para quantidade positiva
             $query->wherePivot('quantidade_atual', '>', 0)
                 ->withPivot('id', 'quantidade_atual', 'quantidade_minima', 'quantidade_maxima', 'validade');
+
+            // Filtro por data de atualização caso as datas de início e fim sejam fornecidas
+            if ($dataInicio && $dataFim) {
+                // Especifica a tabela ao usar 'updated_at' para evitar ambiguidades
+                $query->whereBetween('produtos.updated_at', [$dataInicio, $dataFim]);
+            }
         }])->findOrFail($estoqueId);
 
+        // Calculando o total do estoque
         $totalEstoque = $estoque->produtos->reduce(function ($carry, $produto) {
             $quantidadeAtual = floatval(str_replace(',', '.', $produto->pivot->quantidade_atual));
             $preco = floatval(str_replace(',', '.', $produto->preco));
 
-
             if ($quantidadeAtual > 0 && $preco > 0) {
                 $valorTotalProduto = $quantidadeAtual * $preco;
-
                 $carry += $valorTotalProduto;
             }
 
             return $carry;
         }, 0);
 
-
+        // Formatando o total do estoque
         $totalEstoque = number_format($totalEstoque, 2, ',', '.');
 
+        // Obtendo o total de baixas
         $baixa = new DescarteProdutoController();
+        $totalBaixa = $baixa->show($estoqueId, $dataInicio, $dataFim)['totalBaixas'];
 
-        $totalBaixa = $baixa->show($estoqueId)['totalBaixas'];
-
+        // Obtendo os dados da escola
         $escola = $estoque->local;
 
+        // Retornando a view com os dados
         return view('estoques.show', compact('estoque', 'escola', 'totalEstoque', 'totalBaixa'));
     }
-
 
 
     /**

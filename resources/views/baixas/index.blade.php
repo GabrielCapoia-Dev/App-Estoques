@@ -1,11 +1,12 @@
 @extends('layouts.index')
 
-<!-- Modal para Download -->
+<!-- Modal para Filtros e Download -->
 <div class="modal fade" id="modalDownload" tabindex="-1" aria-labelledby="modalDownloadLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="modalDownloadLabel">Filtros para Download</h5>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title" id="modalDownloadLabel">Filtros para Download <i class="fa-solid fa-filter"></i>
+                </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -19,7 +20,7 @@
                         <label class="ms-3"><input type="checkbox" name="formato[]" value="pdf"> PDF</label>
                     </div>
 
-                    <!-- Lista de Escolas -->
+                    <!-- Opções de escolas -->
                     <div class="mb-3">
                         <label><input type="checkbox" id="todos" name="todos"> Todas as Escolas</label>
                     </div>
@@ -37,6 +38,36 @@
                         @enderror
                     </div>
 
+
+                    <!-- Filtros -->
+                    <div class="mb-4" id="motivoFiltro" style="display: none;">
+                        <label for="motivo-descarte" class="form-label">Motivo</label>
+                        <select class="form-select" id="motivo-descarte" name="motivo-descarte">
+                            <option value="">Filtre por motivo</option>
+                            <option value="Utilizado">Utilizado</option>
+                            <option value="Vencimento">Vencimento</option>
+                            <option value="Improprio para Consumo">Impróprio para consumo</option>
+                            <option value="Danificado">Danificado</option>
+                        </select>
+                    </div>
+
+                    <p class="fw-bold">Período</p>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="data-inicio" class="form-label">Início</label>
+                                <input type="date" class="form-control" id="data-inicio" name="data-inicio">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="data-fim" class="form-label">Fim</label>
+                                <input type="date" class="form-control" id="data-fim" name="data-fim">
+                            </div>
+                        </div>
+                    </div>
+
+
                     <!-- Botões de ação -->
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -47,7 +78,6 @@
         </div>
     </div>
 </div>
-
 
 
 
@@ -128,6 +158,83 @@
 
     </div>
 @endsection
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('formDownload');
+
+        form.addEventListener('submit', function(event) {
+            // Seleciona os checkboxes de formato
+            const checkboxes = document.querySelectorAll('input[name="formato[]"]');
+
+            // Verifica se pelo menos um checkbox está marcado
+            const isAnyChecked = Array.from(checkboxes).some(checkbox => checkbox.checked);
+
+            if (!isAnyChecked) {
+                event.preventDefault(); // Impede o envio do formulário
+                alert('Por favor, selecione pelo menos um formato de download (CSV ou PDF).');
+            }
+        });
+    });
+</script>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('formDownload');
+        const checkboxTodos = document.getElementById('todos');
+        const selectEscolas = document.getElementById('escolas');
+        const motivoFiltro = document.getElementById('motivoFiltro');
+
+        // Sincronização entre checkbox "Todas as Escolas" e select
+        checkboxTodos.addEventListener('change', function() {
+            if (this.checked) {
+                selectEscolas.value = ''; // Limpa a seleção do select
+                motivoFiltro.style.display = 'none'; // Oculta o filtro por motivo
+            } else {
+                if (selectEscolas.value !== '') {
+                    motivoFiltro.style.display =
+                    'block'; // Exibe o filtro por motivo se uma escola estiver selecionada
+                }
+            }
+        });
+
+        selectEscolas.addEventListener('change', function() {
+            if (this.value) {
+                checkboxTodos.checked = false; // Desmarca o checkbox "Todas as Escolas"
+                motivoFiltro.style.display = 'block'; // Exibe o filtro por motivo
+            } else {
+                motivoFiltro.style.display =
+                'none'; // Oculta o filtro por motivo se nenhuma escola for selecionada
+            }
+        });
+
+        form.addEventListener('submit', function(event) {
+            // Validação dos formatos
+            const checkboxesFormatos = document.querySelectorAll('input[name="formato[]"]');
+            const isAnyFormatoChecked = Array.from(checkboxesFormatos).some(checkbox => checkbox
+                .checked);
+
+            if (!isAnyFormatoChecked) {
+                event.preventDefault();
+                alert('Por favor, selecione pelo menos um formato de download (CSV ou PDF).');
+                return;
+            }
+
+            // Validação das escolas
+            const isTodosChecked = checkboxTodos.checked;
+            const isEscolaSelected = selectEscolas.value !== '';
+
+            if (!isTodosChecked && !isEscolaSelected) {
+                event.preventDefault();
+                alert('Por favor, selecione "Todas as Escolas" ou uma escola específica.');
+                return;
+            }
+        });
+    });
+</script>
+
+
 
 <script>
     document.getElementById('btnDownload').addEventListener('click', function() {

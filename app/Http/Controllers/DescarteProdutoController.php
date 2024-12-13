@@ -59,109 +59,39 @@ class DescarteProdutoController extends Controller
 
 
     /**
-     * Gerar download do relatório chamando o metodo de conversão
-     * no formato do arquivo
-     */
-    public function download(Request $request)
-    {
-        $valorTotalBaixaGeral = 0;
-        $valorTotalEstoqueGeral = 0;
-        $resultado = [];
-        $estoqueController = new EstoqueController();
-
-        $locals = $request->has('todos') ? Local::all() : Local::whereIn('id', $request->input('escolas'))->get();
-
-        foreach ($locals as $local) {
-            $requestMock = Request::create('', 'GET', ['status_estoque' => 'Ativo']);
-
-            $totalEstoque = floatval(str_replace(',', '.', str_replace('.', '', $estoqueController->index($requestMock, $local->id)['totalEstoque'] ?? '0')));
-            $totalBaixas = floatval(str_replace(',', '.', str_replace('.', '', $estoqueController->index($requestMock, $local->id)['totalBaixa'] ?? '0')));
-
-            $valorTotalBaixaGeral += $totalBaixas;
-            $valorTotalEstoqueGeral += $totalEstoque;
-
-            $resultado[] = [
-                'idLocal' => $local->id,
-                'local' => $local->nome_local,
-                'valorTotalEstoque' => $totalEstoque,
-                'valorTotalBaixa' => $totalBaixas,
-            ];
-        }
-
-        if ($request->has('formato') && in_array('csv', $request->input('formato'))) {
-            return $this->downloadCsv($resultado, $request->has('todos'));
-        }
-
-        return redirect()->back()->with('error', 'Selecione um formato de download.');
-    }
-
-
-    /**
-     * Gera e faz o download do relatório de baixas em formato CSV.
-     */
-    public function downloadCsv($resultado, $todos)
-    {
-        $csvContent = "Local;Valor Total Estoque;Valor Total Baixa\n";
-
-        $totalEstoqueGeral = 0;
-        $totalBaixaGeral = 0;
-
-        foreach ($resultado as $row) {
-            $valorEstoque = $row['valorTotalEstoque'];
-            $valorBaixa = $row['valorTotalBaixa'];
-
-            $totalEstoqueGeral += $valorEstoque;
-            $totalBaixaGeral += $valorBaixa;
-
-            $csvContent .= implode(';', [
-                $row['local'],
-                'R$ ' . number_format($valorEstoque, 2, ',', '.'),
-                'R$ ' . number_format($valorBaixa, 2, ',', '.')
-            ]) . "\n";
-        }
-
-        $csvContent .= implode(';', [
-            'TOTAL',
-            'R$ ' . number_format($totalEstoqueGeral, 2, ',', '.'),
-            'R$ ' . number_format($totalBaixaGeral, 2, ',', '.')
-        ]) . "\n";
-
-        $nomeArquivo = $todos ? 'relatorio-todas-as-escolas.csv' : (isset($resultado[0]) ? $resultado[0]['local'] . '_relatorio.csv' : 'relatorio_baixas.csv');
-
-        return Response::make($csvContent, 200, [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="' . $nomeArquivo . '"',
-        ]);
-    }
-
-
-    /**
      * Exibir todas as baixas de um estoque
      */
-    public function show($estoqueId)
+    public function show($estoqueId, $dataInicio = null, $dataFim = null)
     {
+        // Carregando o estoque e os produtos relacionados
         $estoque = Estoque::with(['produtos' => function ($query) {
             $query->wherePivot('quantidade_atual', '>', 0)
                 ->withPivot('id', 'quantidade_atual', 'quantidade_minima', 'quantidade_maxima', 'validade');
         }])->findOrFail($estoqueId);
-
-
+    
+        // Carregando os dados relacionados ao estoque
         $estoque_produto = EstoqueProduto::where("estoque_id", $estoqueId)->get();
         $estoqueProdutoIds = $estoque_produto->pluck('id');
         $produtosIds = $estoque_produto->pluck('produto_id');
         $produtos = Produto::whereIn('id', $produtosIds)->get();
-
-        $baixas = DescarteProdutos::with('produto')
+    
+        // Carregando as baixas com o filtro de data, caso as datas sejam passadas
+        $baixasQuery = DescarteProdutos::with('produto')
             ->whereIn('id_estoque_produto', $estoqueProdutoIds)
-            ->orderBy('created_at', 'desc')
-            ->get();
-
+            ->orderBy('created_at', 'desc');
+    
+        // Aplica o filtro de data se as datas de início e fim forem fornecidas
+        if ($dataInicio && $dataFim) {
+            $baixasQuery->whereBetween('updated_at', [$dataInicio, $dataFim]);
+        }
+    
+        $baixas = $baixasQuery->get();
+    
+        // Mapeando os dados completos das baixas e produtos
         $dadosCompletos = $baixas->map(function ($baixa) use ($produtos, $estoque_produto) {
             $estoqueProduto = $estoque_produto->firstWhere('id', $baixa->id_estoque_produto);
-
             $produto = $produtos->firstWhere('id', $estoqueProduto->produto_id);
-
-
+    
             return [
                 'baixas' => [
                     'id' => $baixa->id,
@@ -175,7 +105,7 @@ class DescarteProdutoController extends Controller
                         : 'Sem validade',
                     'created_at' => $baixa->created_at->format('d/m/Y')
                 ],
-
+    
                 'produtos' => [
                     'id_produto' => $estoqueProduto->produto_id,
                     'preco_produto' => $produto ? $produto->preco : 0,
@@ -183,13 +113,17 @@ class DescarteProdutoController extends Controller
                 ]
             ];
         });
+    
+        // Calculando o valor total das baixas
         $totalBaixas = $this->calcularValorTotal($dadosCompletos->toArray());
+    
+        // Obtendo o id da escola
         $escola = $estoque['id'];
-
+    
+        // Retornando a view com os dados
         return view('baixas.show', compact('dadosCompletos', 'estoque', 'totalBaixas', 'escola'));
     }
-
-
+    
 
     /**
      * Filtrar baixas do estoque
@@ -240,8 +174,6 @@ class DescarteProdutoController extends Controller
         ]);
     }
 
-
-
     /**
      * Calcular valor total de descarte
      */
@@ -260,9 +192,6 @@ class DescarteProdutoController extends Controller
 
         return $totalBaixas;
     }
-
-
-
 
     /**
      * Processa o descarte do produto no estoque.

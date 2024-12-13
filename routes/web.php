@@ -3,6 +3,7 @@
 use App\Http\Controllers\CategoriaController;
 use App\Http\Controllers\EstoqueController;
 use App\Http\Controllers\DescarteProdutoController;
+use App\Http\Controllers\DownloadController;
 use App\Http\Controllers\EstoqueProdutoController;
 use App\Http\Controllers\HistoricoProdutoController;
 use App\Http\Controllers\LocalController;
@@ -88,7 +89,8 @@ Route::prefix('estoques/{estoque}/baixas')->name('estoques.baixas.')->group(func
 
 Route::prefix('baixas')->name('baixas.')->group(function () {
     Route::get('/listar', [DescarteProdutoController::class, 'index'])->name('index');
-    Route::get('/download', [DescarteProdutoController::class, 'download'])->name('download');
+    Route::get('/download', [DownloadController::class, 'download'])->name('download');
+    Route::get('/download/individual/{idEscola}/{idEstoque}', [DownloadController::class, 'downloadIndividualDoEstoque'])->name('download.individual');
 });
 Route::prefix('relatorios')->name('relatorios.')->group(function () {
     Route::get('/listar', [RelatorioController::class, 'index'])->name('index');
