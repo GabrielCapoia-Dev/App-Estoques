@@ -144,6 +144,10 @@
                         Relatórios</a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link" href="{{ url('/pedidos/listar') }}"><i class="fa-solid fa-truck"></i>
+                        Pedidos</a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link" href="{{ url('/usuarios/listar') }}"><i class="fas fa-users"></i> Usuários</a>
                 </li>
             </ul>
@@ -181,6 +185,10 @@
                             Relatórios</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="{{ url('/pedidos/listar') }}"><i class="fa-solid fa-truck"></i>
+                            Pedidos</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="{{ url('/usuarios/listar') }}"><i class="fas fa-users"></i>
                             Usuários</a>
                     </li>
@@ -198,8 +206,9 @@
 
     <!-- Rodapé -->
     <div class="footer text-center"
-    style="height: 15px; display: flex; align-items: center; justify-content: center; background-color: #f8f9fa; box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1); font-size: 0.8rem;">
-        <p style="margin-top: 20px;">© 2024 Desenvolvido por <a href="https://github.com/GabrielCapoia-Dev" target="_blank">Gabriel Capoia</a></p>
+        style="height: 15px; display: flex; align-items: center; justify-content: center; background-color: #f8f9fa; box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1); font-size: 0.8rem;">
+        <p style="margin-top: 20px;">© 2024 Desenvolvido por <a href="https://github.com/GabrielCapoia-Dev"
+                target="_blank">Gabriel Capoia</a></p>
     </div>
 
     <!-- Script do Bootstrap -->

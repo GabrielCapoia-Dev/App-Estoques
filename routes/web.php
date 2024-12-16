@@ -8,6 +8,7 @@ use App\Http\Controllers\EstoqueProdutoController;
 use App\Http\Controllers\HistoricoProdutoController;
 use App\Http\Controllers\LocalController;
 use App\Http\Controllers\LoginController;
+use App\Http\Controllers\PedidoController;
 use App\Http\Controllers\ProdutoController;
 use App\Http\Controllers\RelatorioController;
 use App\Http\Controllers\UsuarioController;
@@ -41,6 +42,7 @@ Route::prefix('escolas')->name('escolas.')->group(function () {
 
 Route::prefix('escolas/{escola}/estoques')->name('estoques.')->group(function () {
     Route::get('/listar', [EstoqueController::class, 'index'])->name('index');
+    Route::get('/getEstoques', [EstoqueController::class, 'getEstoques'])->name('getEstoques');
     Route::get('/create', [EstoqueController::class, 'create'])->name('create');
     Route::post('/criarEstoque', [EstoqueController::class, 'criarEstoque'])->name('criarEstoque');
     Route::get('/{estoque}/visualizar', [EstoqueController::class, 'show'])->name('show');
@@ -94,4 +96,7 @@ Route::prefix('baixas')->name('baixas.')->group(function () {
 });
 Route::prefix('relatorios')->name('relatorios.')->group(function () {
     Route::get('/listar', [RelatorioController::class, 'index'])->name('index');
+});
+Route::prefix('pedidos')->name('pedidos.')->group(function () {
+    Route::get('/listar', [PedidoController::class, 'index'])->name('index');
 });

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Categoria;
 use App\Models\DescarteProdutos;
 use App\Models\Estoque;
 use App\Models\EstoqueProduto;
@@ -32,7 +33,7 @@ class DownloadController extends Controller
         $requestDataInicio = $request->input('data-inicio');
         $requestDataFim = $request->input('data-fim');
         $requestMotivoDescarte = $request->input('motivo-descarte');
-
+        $requestCategoria = $request->input('categoria-select');
 
         //Se não foi passado o valor para todas as escolas e se foi passado o valor de apenas UMA escola então:
         if ($requestValorTodasEscolas == false && $requestEscolas != null) {
@@ -48,7 +49,7 @@ class DownloadController extends Controller
                 return redirect()->back()->with('error', 'A escola selecionada não existe.');
             }
 
-            return $this->downloadIndividualCsv($idEscola, $requestDataFim, $requestDataInicio, $requestMotivoDescarte);
+            return $this->downloadIndividualCsv($idEscola, $requestDataFim, $requestDataInicio, $requestMotivoDescarte, $requestCategoria);
         }
 
 
@@ -121,7 +122,7 @@ class DownloadController extends Controller
     /**
      * Gera e faz o download do relatório de baixas em formato CSV de uma escola individualmente
      */
-    public function downloadIndividualCsv($idEscola, $requestDataFim, $requestDataInicio, $requestMotivoDescarte)
+    public function downloadIndividualCsv($idEscola, $requestDataFim, $requestDataInicio, $requestMotivoDescarte, $requestCategoria)
     {
         if (!$idEscola) {
             return redirect()->back()->with('error', 'Escola não encontrada.');
@@ -141,6 +142,8 @@ class DownloadController extends Controller
             'nome_estoque',
             'id_produto',
             'nome_produto',
+            'id_categoria',
+            'nome_categoria',
             'valor_produto',
             'quantidade_descarte',
             'motivo_descarte',
@@ -164,34 +167,40 @@ class DownloadController extends Controller
 
             foreach ($baixas['dadosCompletos'] as $item) {
                 $estoqueProduto = $item['baixas'];
-                if ($estoqueProduto['defeito_descarte'] == $requestMotivoDescarte) {
-                    $produto = $item['produtos'];
+                if ($estoqueProduto['id_categoria'] == $requestCategoria || $requestCategoria == null) {
+                    if (($estoqueProduto['defeito_descarte'] == $requestMotivoDescarte) || ($requestMotivoDescarte == null)) {
+                        $produto = $item['produtos'];
+                        $produtoCategoria = Produto::find($produto['id_produto']);
+                        $categoria = Categoria::find($produtoCategoria['id_categoria']);
 
-                    $precoProduto = floatval(str_replace(',', '.', str_replace('.', '', $produto['preco_produto'])));
-                    $quantidadeDescarte = floatval($estoqueProduto['quantidade_descarte']);
+                        $precoProduto = floatval(str_replace(',', '.', str_replace('.', '', $produto['preco_produto'])));
+                        $quantidadeDescarte = floatval($estoqueProduto['quantidade_descarte']);
 
-                    // Calcular o valor do item (valor unitário * quantidade)
-                    $valorItem = $precoProduto * $quantidadeDescarte;
+                        // Calcular o valor do item (valor unitário * quantidade)
+                        $valorItem = $precoProduto * $quantidadeDescarte;
 
-                    // Somar aos totais
-                    $totalEstoqueGeral += $precoProduto * $quantidadeDescarte;
+                        // Somar aos totais
+                        $totalEstoqueGeral += $precoProduto * $quantidadeDescarte;
 
-                    // Adicionar a linha para o CSV
-                    $csvContent .= implode(';', [
-                        $estoqueProduto['id'], // id da baixa
-                        $escola->id, // id da escola
-                        $escola->nome_local, // nome da escola
-                        $estoque->id, // id do estoque
-                        $estoque->nome_estoque, // nome do estoque
-                        $produto['id_produto'], // id do produto
-                        $estoqueProduto['nome_produto'], // nome do produto
-                        number_format($precoProduto, 2, ',', '.'), // valor do produto
-                        number_format($estoqueProduto['quantidade_descarte'], 2, ',', '.'), // quantidade descartada
-                        $estoqueProduto['defeito_descarte'], // defeito descartado
-                        $estoqueProduto['validade'], // validade
-                        $estoqueProduto['created_at'], // data de descarte
-                        number_format($valorItem, 2, ',', '.') // valor do item (valor unitário * quantidade)
-                    ]) . "\n";
+                        // Adicionar a linha para o CSV
+                        $csvContent .= implode(';', [
+                            $estoqueProduto['id'], // id da baixa
+                            $escola->id, // id da escola
+                            $escola->nome_local, // nome da escola
+                            $estoque->id, // id do estoque
+                            $estoque->nome_estoque, // nome do estoque
+                            $produto['id_produto'], // id do produto
+                            $estoqueProduto['nome_produto'], // nome do produto
+                            $categoria->id, // id da categoria
+                            $categoria->nome_categoria, // nome da categoria
+                            number_format($precoProduto, 2, ',', '.'), // valor do produto
+                            number_format($estoqueProduto['quantidade_descarte'], 2, ',', '.'), // quantidade descartada
+                            $estoqueProduto['defeito_descarte'], // defeito descartado
+                            $estoqueProduto['validade'], // validade
+                            $estoqueProduto['created_at'], // data de descarte
+                            number_format($valorItem, 2, ',', '.') // valor do item (valor unitário * quantidade)
+                        ]) . "\n";
+                    }
                 }
             }
         }

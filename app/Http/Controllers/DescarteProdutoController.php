@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Categoria;
 use App\Models\EstoqueProduto;
 use App\Models\DescarteProdutos;
 use App\Models\Estoque;
@@ -20,6 +21,9 @@ class DescarteProdutoController extends Controller
      */
     public function index()
     {
+
+        $categorias = Categoria::all();
+
         $valorTotalBaixaGeral = 0;
         $valorTotalEstoqueGeral = 0;
 
@@ -53,7 +57,7 @@ class DescarteProdutoController extends Controller
         $totalEstoqueGeralFormatado = number_format($valorTotalEstoqueGeral, 2, ',', '.');
 
         // Retorna a view com os dados
-        return view('baixas.index', compact('locals', 'resultado', 'totalBaixaGeralFormatado', 'totalEstoqueGeralFormatado'));
+        return view('baixas.index', compact('locals', 'categorias', 'resultado', 'totalBaixaGeralFormatado', 'totalEstoqueGeralFormatado'));
     }
 
 
@@ -96,6 +100,7 @@ class DescarteProdutoController extends Controller
                 'baixas' => [
                     'id' => $baixa->id,
                     'id_estoque_produto' => $estoqueProduto->id,
+                    'id_categoria' => $produto->id_categoria,
                     'nome_produto' => $produto ? $produto->nome_produto : 'Produto não encontrado',
                     'quantidade_descarte' => $baixa->quantidade_descarte,
                     'defeito_descarte' => $baixa->defeito_descarte ?? 'Não especificado',

@@ -38,8 +38,18 @@
                         @enderror
                     </div>
 
+                    <!-- Filtro Categoria -->
+                    <div class="mb-4" id="categoria" style="display: none;">
+                        <label for="categoria-select" class="form-label">Categoria</label>
+                        <select class="form-select" id="categori-select" name="categoria-select">
+                            <option value="">Filtre por categoria</option>
+                            @foreach ($categorias as $categoria)
+                                <option value="{{ $categoria->id }}">{{ $categoria->nome_categoria }}</option>
+                            @endforeach
+                        </select>
+                    </div>
 
-                    <!-- Filtros -->
+                    <!-- Filtro Descarte -->
                     <div class="mb-4" id="motivoFiltro" style="display: none;">
                         <label for="motivo-descarte" class="form-label">Motivo</label>
                         <select class="form-select" id="motivo-descarte" name="motivo-descarte">
@@ -185,15 +195,19 @@
         const checkboxTodos = document.getElementById('todos');
         const selectEscolas = document.getElementById('escolas');
         const motivoFiltro = document.getElementById('motivoFiltro');
+        const categoria = document.getElementById('categoria');
 
         // Sincronização entre checkbox "Todas as Escolas" e select
         checkboxTodos.addEventListener('change', function() {
             if (this.checked) {
                 selectEscolas.value = ''; // Limpa a seleção do select
                 motivoFiltro.style.display = 'none'; // Oculta o filtro por motivo
+                categoria.style.display = 'none'; // Oculta o filtro por motivo
             } else {
                 if (selectEscolas.value !== '') {
                     motivoFiltro.style.display =
+                    'block'; // Exibe o filtro por motivo se uma escola estiver selecionada
+                    categoria.style.display =
                     'block'; // Exibe o filtro por motivo se uma escola estiver selecionada
                 }
             }
@@ -203,8 +217,11 @@
             if (this.value) {
                 checkboxTodos.checked = false; // Desmarca o checkbox "Todas as Escolas"
                 motivoFiltro.style.display = 'block'; // Exibe o filtro por motivo
+                categoria.style.display = 'block'; // Exibe o filtro por motivo
             } else {
                 motivoFiltro.style.display =
+                'none'; // Oculta o filtro por motivo se nenhuma escola for selecionada
+                categoria.style.display =
                 'none'; // Oculta o filtro por motivo se nenhuma escola for selecionada
             }
         });

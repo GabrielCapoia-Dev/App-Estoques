@@ -10,6 +10,13 @@ use Illuminate\Support\Facades\Validator;
 class EstoqueController extends Controller
 {
 
+    public function getEstoques($id_local)
+    {
+        $estoques = Estoque::where('id_local', $id_local)->get();
+        return response()->json(['success' => true, 'estoques' => $estoques]);
+    }
+
+
     /**
      * Lista os estoques de um local específico com base no status.
      */
@@ -44,7 +51,7 @@ class EstoqueController extends Controller
             $idEstoque = $estoque->id;
 
             // Obtém o total de estoque
-            $totalEstoque = $this->show($request,$escola->id, $idEstoque)['totalEstoque'];
+            $totalEstoque = $this->show($request, $escola->id, $idEstoque)['totalEstoque'];
 
             // Obtém o total de baixas
             $baixa = $baixaController->show($idEstoque, $dataInicio, $dataFim);
