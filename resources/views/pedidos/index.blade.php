@@ -17,7 +17,7 @@
             <div class="card-body">
                 <form method="GET" action="#">
                     <div class="row align-items-end">
-                        <div class="col-md-8">
+                        <div class="col-md-5">
                             <label for="local" class="form-label">Escola</label>
                             <select id="local" name="local" class="form-select">
                                 <option value="">Selecione um local</option>
@@ -27,7 +27,15 @@
                                 <option value="3">Local 3</option>
                             </select>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-2">
+                            <label for="dataInicio" class="form-label">Data Início</label>
+                            <input type="date" id="dataInicio" name="dataInicio" class="form-control">
+                        </div>
+                        <div class="col-md-2">
+                            <label for="dataFim" class="form-label">Data Fim</label>
+                            <input type="date" id="dataFim" name="dataFim" class="form-control">
+                        </div>
+                        <div class="col-md-3">
                             <button type="submit" class="btn btn-primary w-100">Filtrar</button>
                         </div>
                     </div>
@@ -46,9 +54,9 @@
                     <thead>
                         <tr>
                             <th>#</th>
-                            <th>Produto</th>
-                            <th>Quantidade</th>
-                            <th>Data</th>
+                            <th>Pedido</th>
+                            <th>Valor($)</th>
+                            <th>Data Prevista</th>
                             <th>Status</th>
                             <th>Ações</th>
                         </tr>
@@ -57,9 +65,9 @@
                         <!-- Substitua por dados reais -->
                         <tr>
                             <td>1</td>
-                            <td>Produto A</td>
-                            <td>10</td>
-                            <td>2024-12-16</td>
+                            <td>Pedido A</td>
+                            <td>R$ 1.375,20</td>
+                            <td>2025-01-16</td>
                             <td>Pendente</td>
                             <td>
                                 <button class="btn btn-sm btn-primary">Visualizar</button>
@@ -68,8 +76,8 @@
                         </tr>
                         <tr>
                             <td>2</td>
-                            <td>Produto B</td>
-                            <td>5</td>
+                            <td>Pedido B</td>
+                            <td>R$ 3.418,92</td>
                             <td>2024-12-15</td>
                             <td>Concluído</td>
                             <td>

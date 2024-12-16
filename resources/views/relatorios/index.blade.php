@@ -6,7 +6,7 @@
 
         <div class="row">
             <!-- Seção de filtros -->
-            <div class="col-md-6">
+            <div class="col-md-12">
                 <div class="card">
                     <div class="card-header bg-primary text-white">
                         <h5>Filtros para Relatórios</h5>
@@ -15,7 +15,7 @@
                         <form method="GET" action="{{ route('relatorios.index') }}">
                             <div class="row">
                                 <!-- Filtro por local -->
-                                <div class="col-md-4">
+                                <div class="col-md-6">
                                     <label for="local" class="form-label">Local</label>
                                     <select id="local" name="local" class="form-select">
                                         <option value="">Selecione</option>
@@ -25,14 +25,14 @@
                                     </select>
                                 </div>
 
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <label for="estoque" class="form-label">Estoque</label>
                                     <select id="estoque" name="estoque" class="form-select">
                                         <option value="">Selecione</option>
                                     </select>
                                 </div>
 
-                                <div class="col-md-4">
+                                <div class="col-md-3">
                                     <label for="categoria-select" class="form-label">Categoria</label>
                                     <select id="categoria" name="categoria" class="form-select">
                                         <option value="">Selecione</option>
@@ -54,9 +54,13 @@
                                     <input type="date" id="dataFim" name="dataFim" class="form-control">
                                 </div>
 
-                                <div class="col-md-4">
+                                <div class="col-md-2">
                                     <label class="form-label d-block">&nbsp;</label>
                                     <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="form-label d-block">&nbsp;</label>
+                                    <button type="submit" class="btn btn-secondary w-100">Baixar</button>
                                 </div>
                             </div>
                         </form>
@@ -64,7 +68,7 @@
                 </div>
             </div>
 
-            <!-- Seção de downloads -->
+            {{-- <!-- Seção de downloads Colocar em um MODAL -->
             <div class="col-md-6">
                 <div class="card">
                     <div class="card-header bg-secondary text-white">
@@ -97,7 +101,7 @@
                         </form>
                     </div>
                 </div>
-            </div>
+            </div> --}}
         </div>
 
         <br>
