@@ -12,7 +12,7 @@
                         <h5>Filtros para Relatórios</h5>
                     </div>
                     <div class="card-body">
-                        <form method="GET" action="{{ route('relatorios.index') }}">
+                        <form method="GET" action="{{ route('relatorios.filtroRelatorio') }}">
                             <div class="row">
                                 <!-- Filtro por local -->
                                 <div class="col-md-6">
@@ -102,6 +102,8 @@
                     </div>
                 </div>
             </div> --}}
+
+
         </div>
 
         <br>
@@ -114,7 +116,46 @@
                         <h5>Lista dos itens filtrados</h5>
                     </div>
                     <div class="card-body">
-                        <p>Itens filtrados</p>
+                        @if ($filtroRelatorioCategoria != null)
+                            @include('layouts.relatorios.filtroRelatorioCategoria', [
+                                'produtosFiltrados' => $produtosFiltrados,
+                                'estoqueProdutosFiltrados' => $estoqueProdutosFiltrados,
+                                'categoriaProdutosFiltrados' => $categoriaProdutosFiltrados,
+                                'estoque' => $estoque,
+                                'escola' => $escola,
+                            ])
+                        @elseif ($filtroRelatorioEstoque != null)
+                            @include('layouts.relatorios.filtroRelatorioEstoque', [
+                                'produtosFiltrados' => $produtosFiltrados,
+                                'estoqueProdutosFiltrados' => $estoqueProdutosFiltrados,
+                                'estoque' => $estoque,
+                                'escola' => $escola,
+                            ])
+                        @elseif ($filtroRelatorioLocal != null)
+                            @include('layouts.relatorios.filtroRelatorioLocal', [
+                                'produtosFiltrados' => $produtosFiltrados,
+                                'estoqueProdutosFiltrados' => $estoqueProdutosFiltrados,
+                                'estoque' => $estoque,
+                                'escola' => $escola,
+                            ])
+                        @elseif ($filtroRelatorioPorLocalECategoria != null)
+                            @include('layouts.relatorios.filtroRelatorioPorLocalECategoria', [
+                                'produtosFiltrados' => $produtosFiltrados,
+                                'estoqueProdutosFiltrados' => $estoqueProdutosFiltrados,
+                                'estoque' => $estoque,
+                                'escola' => $escola,
+                            ])
+                        @elseif ($filtroRelatorioGeral != null)
+
+                            @include('layouts.relatorios.filtroRelatorioGeral', [
+                                'produtosFiltrados' => $produtosFiltrados,
+                                'estoqueProdutosFiltrados' => $estoqueProdutosFiltrados,
+                                'escola' => $escola,
+                            ])
+                        @else
+                            <p>Por favor, aplique os filtros para visualizar os resultados.</p>
+                        @endif
+
                     </div>
                 </div>
             </div>

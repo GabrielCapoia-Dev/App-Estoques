@@ -6,6 +6,8 @@ use App\Models\Categoria;
 use App\Models\Estoque;
 use App\Models\EstoqueProduto;
 use App\Models\Local;
+use App\Models\Produto;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class RelatorioController extends Controller
@@ -18,10 +20,15 @@ class RelatorioController extends Controller
         // Obter locais e categorias
         $locals = Local::all();
         $categorias = Categoria::all();
+        $filtroRelatorioCategoria = null;
+        $filtroRelatorioEstoque = null;
+        $filtroRelatorioLocal = null;
+        $filtroRelatorioPorLocalECategoria = null;
+        $filtroRelatorioGeral = null;
 
 
         // Retorna a view com os locais, categorias e produtos filtrados
-        return view('relatorios.index', compact('locals', 'categorias'));
+        return view('relatorios.index', compact('locals', 'categorias', 'filtroRelatorioCategoria', 'filtroRelatorioEstoque', 'filtroRelatorioLocal', 'filtroRelatorioPorLocalECategoria', 'filtroRelatorioGeral'));
     }
 
     /**
@@ -36,37 +43,404 @@ class RelatorioController extends Controller
         $dataInicio = $request->input('dataInicio');
         $dataFim = $request->input('dataFim');
 
-        // Iniciar a consulta base com o modelo EstoqueProduto
-        $query = EstoqueProduto::query();
 
-        // Filtrar por local se fornecido
-        if ($localId) {
-            $query->whereHas('estoque', function ($q) use ($localId) {
-                $q->where('id_local', $localId);
-            });
+        if ($localId != null && $estoqueId != null && $categoriaId != null) {
+            $filtro = $this->filtroRelatorioCategoria($localId, $estoqueId, $categoriaId, $dataInicio, $dataFim);
+
+            return view('relatorios.index', [
+                'locals' => Local::all(),
+                'categorias' => Categoria::all(),
+                'filtroRelatorioCategoria' => $filtro,
+                'produtosFiltrados' => $filtro['produtosFiltrados'],
+                'estoqueProdutosFiltrados' => $filtro['estoqueProdutosFiltrados'],
+                'categoriaProdutosFiltrados' => $filtro['categoria'],
+                'estoque' => $filtro['estoque'],
+                'escola' => $filtro['local'],
+            ]);
         }
 
-        // Filtrar por estoque se fornecido
-        if ($estoqueId) {
-            $query->where('estoque_id', $estoqueId);
+        if ($localId != null && $estoqueId != null && $categoriaId == null) {
+            $filtro = $this->filtroRelatorioEstoque($localId, $estoqueId, $dataInicio, $dataFim);
+            // dd(json_encode($filtro, JSON_PRETTY_PRINT));
+            return view('relatorios.index', [
+                'locals' => Local::all(),
+                'categorias' => Categoria::all(),
+                'filtroRelatorioCategoria' => null,
+                'filtroRelatorioEstoque' => $filtro,
+                'produtosFiltrados' => $filtro['produtosFiltrados'],
+                'estoqueProdutosFiltrados' => $filtro['estoqueProdutosFiltrados'],
+                'estoque' => $filtro['estoque'],
+                'escola' => $filtro['local'],
+            ]);
         }
 
-        // Filtrar por categoria se fornecido
-        if ($categoriaId) {
-            $query->whereHas('produto', function ($q) use ($categoriaId) {
-                $q->where('id_categoria', $categoriaId);
-            });
+        if ($localId != null && $estoqueId == null && $categoriaId == null) {
+            $filtro = $this->filtroRelatorioLocal($localId, $dataInicio, $dataFim);
+            return view('relatorios.index', [
+                'locals' => Local::all(),
+                'categorias' => Categoria::all(),
+                'filtroRelatorioCategoria' => null,
+                'filtroRelatorioEstoque' => null,
+                'filtroRelatorioLocal' => $filtro,
+                'produtosFiltrados' => $filtro['produtosFiltrados'],
+                'estoqueProdutosFiltrados' => $filtro['estoqueProdutosFiltrados'],
+                'estoque' => $filtro['estoque'],
+                'escola' => $filtro['local'],
+            ]);
         }
 
-        // Filtrar por data de início e fim se fornecido
+        if (($localId != null && $categoriaId != null) && $estoqueId == null) {
+            $filtro = $this->filtroRelatorioPorLocalECategoria($localId, $categoriaId, $dataInicio, $dataFim);
+            return view('relatorios.index', [
+                'locals' => Local::all(),
+                'categorias' => Categoria::all(),
+                'filtroRelatorioCategoria' => null,
+                'filtroRelatorioEstoque' => null,
+                'filtroRelatorioLocal' => null,
+                'filtroRelatorioPorLocalECategoria' => $filtro,
+                'produtosFiltrados' => $filtro['produtosFiltrados'],
+                'estoqueProdutosFiltrados' => $filtro['estoqueProdutosFiltrados'],
+                'estoque' => $filtro['estoque'],
+                'escola' => $filtro['local'],
+            ]);
+        }
+
+        if ($localId == null && $categoriaId == null && $estoqueId == null) {
+            // dd('Geral');
+            $filtro = $this->filtroRelatorioGeral($dataInicio, $dataFim);
+            return view('relatorios.index', [
+                'locals' => Local::all(),
+                'categorias' => Categoria::all(),
+                'filtroRelatorioCategoria' => null,
+                'filtroRelatorioEstoque' => null,
+                'filtroRelatorioLocal' => null,
+                'filtroRelatorioPorLocalECategoria' => null,
+                'filtroRelatorioGeral' => $filtro,
+                'produtosFiltrados' => $filtro['produtosFiltrados'],
+                'estoqueProdutosFiltrados' => $filtro['estoqueProdutosFiltrados'],
+                'escola' => $filtro['local'],
+            ]);
+        }
+
+        if ($localId == null && $categoriaId != null && $estoqueId == null) {
+            dd('Geral Categoria');
+            $filtro = $this->filtroRelatorioGeralPorCategoria($categoriaId, $dataInicio, $dataFim);
+            return $filtro;
+        }
+    }
+
+
+    /**
+     * Filtragem de produtos no estoque, com base na categoria solicitada
+     */
+    public function filtroRelatorioCategoria($localId, $estoqueId, $categoriaId, $dataInicio = null, $dataFim = null)
+    {
+        // Recupera o estoque e a categoria
+        $local = Local::findOrFail($localId);
+        $estoque = Estoque::findOrFail($estoqueId);
+        $categoria = Categoria::findOrFail($categoriaId);
+
+        // Constrói a consulta base para os produtos no estoque e na categoria especificada
+        $query = Produto::whereHas('estoques', function ($query) use ($estoque) {
+            $query->where('estoque_id', $estoque->id);
+        })->where('id_categoria', $categoria->id);
+
+        // Aplica filtragem por data, se as datas forem fornecidas
         if ($dataInicio && $dataFim) {
-            $query->whereBetween('created_at', [$dataInicio, $dataFim]);
+            $dataInicio = Carbon::createFromFormat('Y-m-d', $dataInicio)->startOfDay();
+            $dataFim = Carbon::createFromFormat('Y-m-d', $dataFim)->endOfDay();
+
+            $query->whereBetween('updated_at', [$dataInicio, $dataFim]);
         }
 
-        // Executar a consulta e pegar os resultados
-        $produtosEstoque = $query->get();
+        // Obtém os produtos filtrados
+        $produtosFiltrados = $query->get();
 
-        // Retornar a view com os resultados filtrados
-        return view('relatorios.index', compact('produtosEstoque'));
+
+        // Extrai os IDs dos produtos filtrados
+        $produtosFiltradosIds = $produtosFiltrados->pluck('id')->toArray();
+
+        // Realiza uma nova busca no estoque com base nos IDs dos produtos filtrados
+        $estoqueProdutosFiltrados = EstoqueProduto::whereIn('produto_id', $produtosFiltradosIds)
+            ->where('estoque_id', $estoque->id)
+            ->where('quantidade_atual', '>', 0)
+            ->get();
+
+        // Verifica se a coleção está vazia
+        if ($produtosFiltrados->isEmpty()) {
+            return [
+                'produtosFiltrados' => 'erro',
+                'estoqueProdutosFiltrados' => 'erro',
+                'categoria' => 'erro',
+                'estoque' => 'erro',
+                'local' => 'erro',
+            ];
+        }
+        // Retorna os produtos filtrados e a categoria
+        return [
+            'produtosFiltrados' => $produtosFiltrados,
+            'estoqueProdutosFiltrados' => $estoqueProdutosFiltrados,
+            'categoria' => $categoria,
+            'estoque' => $estoque,
+            'local' => $local,
+        ];
+    }
+
+    /**
+     * Filtragem de produtos no estoque
+     */
+    public function filtroRelatorioEstoque($localId, $estoqueId, $dataInicio = null, $dataFim = null)
+    {
+        // Recupera o local e o estoque
+        $local = Local::findOrFail($localId);
+        $estoque = Estoque::findOrFail($estoqueId);
+
+        // Constrói a consulta base para os produtos no estoque especificado
+        $query = Produto::whereHas('estoques', function ($query) use ($estoque) {
+            $query->where('estoque_id', $estoque->id);
+        })->with('categoria'); // Carrega a relação com a categoria
+
+        // Aplica filtragem por data, se as datas forem fornecidas
+        if ($dataInicio && $dataFim) {
+            $dataInicio = Carbon::createFromFormat('Y-m-d', $dataInicio)->startOfDay();
+            $dataFim = Carbon::createFromFormat('Y-m-d', $dataFim)->endOfDay();
+
+            $query->whereBetween('updated_at', [$dataInicio, $dataFim]);
+        }
+
+        // Obtém os produtos filtrados
+        $produtosFiltrados = $query->get();
+        // Extrai os IDs dos produtos filtrados
+        $produtosFiltradosIds = $produtosFiltrados->pluck('id')->toArray();
+
+        // Realiza uma nova busca no estoque com base nos IDs dos produtos filtrados
+        $estoqueProdutosFiltrados = EstoqueProduto::whereIn('produto_id', $produtosFiltradosIds)
+            ->where('estoque_id', $estoque->id)
+            ->where('quantidade_atual', '>', 0)
+            ->get();
+
+        // Verifica se a coleção está vazia
+        if ($produtosFiltrados->isEmpty()) {
+            return [
+                'produtosFiltrados' => 'erro',
+                'estoqueProdutosFiltrados' => 'erro',
+                'estoque' => 'erro',
+                'local' => 'erro',
+            ];
+        }
+        // Retorna os produtos filtrados, suas categorias, o estoque e o local
+        return [
+            'produtosFiltrados' => $produtosFiltrados,
+            'estoqueProdutosFiltrados' => $estoqueProdutosFiltrados,
+            'estoque' => $estoque,
+            'local' => $local,
+        ];
+    }
+
+
+    /**
+     * Filtragem de produtos no estoque
+     */
+    public function filtroRelatorioLocal($localId, $dataInicio = null, $dataFim = null)
+    {
+        // Recupera o local
+        $local = Local::findOrFail($localId);
+
+        // Obtém os IDs dos estoques associados ao local
+        $estoquesIds = $local->estoques->pluck('id')->toArray();
+
+        // Constrói a consulta base para os produtos nos estoques especificados
+        $query = Produto::whereHas('estoques', function ($query) use ($estoquesIds) {
+            $query->whereIn('estoque_id', $estoquesIds);
+        });
+
+        // Aplica filtragem por data, se as datas forem fornecidas
+        if ($dataInicio && $dataFim) {
+            $dataInicio = Carbon::createFromFormat('Y-m-d', $dataInicio)->startOfDay();
+            $dataFim = Carbon::createFromFormat('Y-m-d', $dataFim)->endOfDay();
+
+            $query->whereBetween('updated_at', [$dataInicio, $dataFim]);
+        }
+
+        // Obtém os produtos filtrados
+        $produtosFiltrados = $query->get();
+
+        // Extrai os IDs dos produtos filtrados
+        $produtosFiltradosIds = $produtosFiltrados->pluck('id')->toArray();
+
+        // Realiza uma nova busca nos estoques com base nos IDs dos produtos filtrados
+        $estoqueProdutosFiltrados = EstoqueProduto::whereIn('produto_id', $produtosFiltradosIds)
+            ->whereIn('estoque_id', $estoquesIds)
+            ->where('quantidade_atual', '>', 0)
+            ->get();
+
+        // Verifica se a coleção está vazia
+        if ($produtosFiltrados->isEmpty()) {
+            return [
+                'produtosFiltrados' => 'erro',
+                'estoqueProdutosFiltrados' => 'erro',
+                'estoque' => 'erro',
+                'local' => 'erro',
+            ];
+        }
+
+        // Retorna os produtos filtrados, os estoques filtrados e o local
+        return [
+            'produtosFiltrados' => $produtosFiltrados,
+            'estoqueProdutosFiltrados' => $estoqueProdutosFiltrados,
+            'local' => $local,
+            'estoque' => Estoque::where('id_local', $local->id)->get(),
+        ];
+    }
+
+    /**
+     * Filtragem de produtos em todos os estoques de um local, com base na categoria solicitada
+     */
+    public function filtroRelatorioPorLocalECategoria($localId, $categoriaId, $dataInicio = null, $dataFim = null)
+    {
+        // Recupera o local e a categoria
+        $local = Local::findOrFail($localId);
+        $categoria = Categoria::findOrFail($categoriaId);
+
+        // Obtém os IDs dos estoques associados ao local
+        $estoquesIds = $local->estoques->pluck('id')->toArray();
+        $estoques = [];
+
+        foreach ($estoquesIds as $id) {
+            $estoque = Estoque::findOrFail($id);
+            $estoques[] = $estoque;
+        }
+
+        // Constrói a consulta base para os produtos nos estoques especificados e na categoria fornecida
+        $query = Produto::whereHas('estoques', function ($query) use ($estoquesIds) {
+            $query->whereIn('estoque_id', $estoquesIds);
+        })->where('id_categoria', $categoria->id);
+
+        // Aplica filtragem por data, se as datas forem fornecidas
+        if ($dataInicio && $dataFim) {
+            $dataInicio = Carbon::createFromFormat('Y-m-d', $dataInicio)->startOfDay();
+            $dataFim = Carbon::createFromFormat('Y-m-d', $dataFim)->endOfDay();
+
+            $query->whereBetween('updated_at', [$dataInicio, $dataFim]);
+        }
+
+        // Obtém os produtos filtrados
+        $produtosFiltrados = $query->get();
+
+        // Extrai os IDs dos produtos filtrados
+        $produtosFiltradosIds = $produtosFiltrados->pluck('id')->toArray();
+
+        // Realiza uma nova busca nos estoques com base nos IDs dos produtos filtrados
+        $estoqueProdutosFiltrados = EstoqueProduto::whereIn('produto_id', $produtosFiltradosIds)
+            ->whereIn('estoque_id', $estoquesIds)
+            ->get();
+
+        // Verifica se a coleção está vazia
+        if ($produtosFiltrados->isEmpty()) {
+            return [
+                'produtosFiltrados' => 'erro',
+                'estoqueProdutosFiltrados' => 'erro',
+                'estoque' => 'erro',
+                'local' => 'erro',
+                'categoria' => 'erro',
+            ];
+        }
+
+        // Retorna os produtos filtrados, os estoques e a categoria
+        return [
+            'produtosFiltrados' => $produtosFiltrados,
+            'estoqueProdutosFiltrados' => $estoqueProdutosFiltrados,
+            'local' => $local,
+            'estoque' => $estoques,
+            'categoria' => $categoria,
+        ];
+    }
+
+    /**
+     * Filtragem de todos os produtos de todos os estoques de todos os locais
+     */
+    public function filtroRelatorioGeral($dataInicio = null, $dataFim = null)
+    {
+        // Constrói a consulta base para os produtos em todos os estoques
+        $query = Produto::whereHas('estoques');
+
+        // Aplica filtragem por data, se as datas forem fornecidas
+        if ($dataInicio && $dataFim) {
+            $dataInicio = Carbon::createFromFormat('Y-m-d', $dataInicio)->startOfDay();
+            $dataFim = Carbon::createFromFormat('Y-m-d', $dataFim)->endOfDay();
+
+            $query->whereBetween('updated_at', [$dataInicio, $dataFim]);
+        }
+
+        // Obtém todos os produtos filtrados
+        $produtosFiltrados = $query->get();
+
+        // Extrai os IDs dos produtos filtrados
+        $produtosFiltradosIds = $produtosFiltrados->pluck('id')->toArray();
+
+        // Realiza uma nova busca nos estoques com base nos IDs dos produtos filtrados
+        $estoqueProdutosFiltrados = EstoqueProduto::whereIn('produto_id', $produtosFiltradosIds)
+            ->get();
+
+        // Verifica se a coleção está vazia
+        if ($produtosFiltrados->isEmpty()) {
+            return [
+                'produtosFiltrados' => 'erro',
+                'estoqueProdutosFiltrados' => 'erro',
+                'local' => 'erro',
+            ];
+        }
+
+        // Retorna os produtos filtrados, os estoques e todos os locais com seus estoques
+        return [
+            'produtosFiltrados' => $produtosFiltrados,
+            'estoqueProdutosFiltrados' => $estoqueProdutosFiltrados,
+            'local' => Local::with('estoques')->get(),
+        ];
+    }
+
+
+    /**
+     * Filtragem de produtos de todos os estoques de todos os locais, com base na categoria especificada
+     */
+    public function filtroRelatorioGeralPorCategoria($categoriaId, $dataInicio = null, $dataFim = null)
+    {
+        // Recupera a categoria
+        $categoria = Categoria::findOrFail($categoriaId);
+
+        // Constrói a consulta base para os produtos da categoria especificada
+        $query = Produto::where('id_categoria', $categoria->id);
+
+        // Aplica filtragem por data, se as datas forem fornecidas
+        if ($dataInicio && $dataFim) {
+            $dataInicio = Carbon::createFromFormat('Y-m-d', $dataInicio)->startOfDay();
+            $dataFim = Carbon::createFromFormat('Y-m-d', $dataFim)->endOfDay();
+
+            $query->whereBetween('updated_at', [$dataInicio, $dataFim]);
+        }
+
+        // Obtém os produtos filtrados
+        $produtosFiltrados = $query->get();
+
+        // Verifica se a coleção está vazia
+        if ($produtosFiltrados->isEmpty()) {
+            return [
+                'erro' => 'Nenhum produto encontrado dessa categoria no período especificado.',
+            ];
+        }
+
+        // Extrai os IDs dos produtos filtrados
+        $produtosFiltradosIds = $produtosFiltrados->pluck('id')->toArray();
+
+        // Realiza uma nova busca nos estoques com base nos IDs dos produtos filtrados
+        $estoqueProdutosFiltrados = EstoqueProduto::whereIn('produto_id', $produtosFiltradosIds)
+            ->get();
+
+        // Retorna os produtos filtrados e os estoques
+        return [
+            'produtosFiltrados' => $produtosFiltrados,
+            'estoqueProdutosFiltrados' => $estoqueProdutosFiltrados,
+            'categoria' => $categoria,
+        ];
     }
 }
