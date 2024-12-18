@@ -5,26 +5,35 @@
         <h1 class="h3">Pedidos de Estoque</h1>
         <!-- Botão para adicionar novo pedido -->
         <div class="mb-2">
-            <a href="#" class="btn btn-success">Novo Pedido</a>
+            <a href="#" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> Voltar</a>
+            <a href="#" class="btn btn-success"><i class="fa-solid fa-plus"></i> Novo</a>
         </div>
 
 
         <!-- Seção de seleção de local -->
         <div class="card mb-4">
             <div class="card-header bg-primary text-white">
-                <h5>Filtrar Escola</h5>
+                <h5>Filtrar</h5>
             </div>
             <div class="card-body">
                 <form method="GET" action="#">
                     <div class="row align-items-end">
-                        <div class="col-md-5">
+                        <div class="col-md-3">
                             <label for="local" class="form-label">Escola</label>
                             <select id="local" name="local" class="form-select">
                                 <option value="">Selecione um local</option>
-                                <!-- Substitua pelos locais reais -->
-                                <option value="1">Local 1</option>
-                                <option value="2">Local 2</option>
-                                <option value="3">Local 3</option>
+                                @foreach ($locals as $local)
+                                    <option value="{{ $local->id }}">{{ $local->nome_local }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="local" class="form-label">Status do Pedido</label>
+                            <select id="local" name="local" class="form-select">
+                                <option value="">Selecione</option>
+                                <option value="">Pendente</option>
+                                <option value="">Concluido</option>
+
                             </select>
                         </div>
                         <div class="col-md-2">
@@ -54,6 +63,7 @@
                     <thead>
                         <tr>
                             <th>#</th>
+                            <th>Local</th>
                             <th>Pedido</th>
                             <th>Valor($)</th>
                             <th>Data Prevista</th>
@@ -65,23 +75,26 @@
                         <!-- Substitua por dados reais -->
                         <tr>
                             <td>1</td>
+                            <td>Benjamin</td>
                             <td>Pedido A</td>
                             <td>R$ 1.375,20</td>
                             <td>2025-01-16</td>
                             <td>Pendente</td>
                             <td>
-                                <button class="btn btn-sm btn-primary">Visualizar</button>
-                                <button class="btn btn-sm btn-danger">Cancelar</button>
+                                <button class="btn btn-sm btn-primary"><i class="fa-solid fa-eye"></i></button>
+                                <button class="btn btn-sm btn-warning"><i class="fa-solid fa-pen-to-square"></i></button>
+                                <button class="btn btn-sm btn-danger"><i class="fa-solid fa-ban"></i></button>
                             </td>
                         </tr>
                         <tr>
                             <td>2</td>
+                            <td>Analides</td>
                             <td>Pedido B</td>
                             <td>R$ 3.418,92</td>
                             <td>2024-12-15</td>
                             <td>Concluído</td>
                             <td>
-                                <button class="btn btn-sm btn-primary">Visualizar</button>
+                                <button class="btn btn-sm btn-primary"><i class="fa-solid fa-eye"></i></button>
                             </td>
                         </tr>
                     </tbody>
