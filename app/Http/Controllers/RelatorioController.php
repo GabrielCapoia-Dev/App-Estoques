@@ -25,10 +25,11 @@ class RelatorioController extends Controller
         $filtroRelatorioLocal = null;
         $filtroRelatorioPorLocalECategoria = null;
         $filtroRelatorioGeral = null;
+        $filtroRelatorioGeralPorCategoria = null;
 
 
         // Retorna a view com os locais, categorias e produtos filtrados
-        return view('relatorios.index', compact('locals', 'categorias', 'filtroRelatorioCategoria', 'filtroRelatorioEstoque', 'filtroRelatorioLocal', 'filtroRelatorioPorLocalECategoria', 'filtroRelatorioGeral'));
+        return view('relatorios.index', compact('locals', 'categorias', 'filtroRelatorioCategoria', 'filtroRelatorioEstoque', 'filtroRelatorioLocal', 'filtroRelatorioPorLocalECategoria', 'filtroRelatorioGeral', 'filtroRelatorioGeralPorCategoria'));
     }
 
     /**
@@ -36,13 +37,13 @@ class RelatorioController extends Controller
      */
     public function filtroRelatorio(Request $request)
     {
+
         // Obter os filtros da requisição
         $localId = $request->input('local');
         $estoqueId = $request->input('estoque');
         $categoriaId = $request->input('categoria');
         $dataInicio = $request->input('dataInicio');
         $dataFim = $request->input('dataFim');
-
 
         if ($localId != null && $estoqueId != null && $categoriaId != null) {
             $filtro = $this->filtroRelatorioCategoria($localId, $estoqueId, $categoriaId, $dataInicio, $dataFim);
@@ -123,9 +124,20 @@ class RelatorioController extends Controller
         }
 
         if ($localId == null && $categoriaId != null && $estoqueId == null) {
-            dd('Geral Categoria');
             $filtro = $this->filtroRelatorioGeralPorCategoria($categoriaId, $dataInicio, $dataFim);
-            return $filtro;
+            return view('relatorios.index', [
+                'locals' => Local::all(),
+                'categorias' => Categoria::all(),
+                'filtroRelatorioCategoria' => null,
+                'filtroRelatorioEstoque' => null,
+                'filtroRelatorioLocal' => null,
+                'filtroRelatorioPorLocalECategoria' => null,
+                'filtroRelatorioGeral' => null,
+                'filtroRelatorioGeralPorCategoria' => $filtro,
+                'produtosFiltrados' => $filtro['produtosFiltrados'],
+                'estoqueProdutosFiltrados' => $filtro['estoqueProdutosFiltrados'],
+                'categoria' => $filtro['categoria'],
+            ]);
         }
     }
 
@@ -144,18 +156,8 @@ class RelatorioController extends Controller
         $query = Produto::whereHas('estoques', function ($query) use ($estoque) {
             $query->where('estoque_id', $estoque->id);
         })->where('id_categoria', $categoria->id);
-
-        // Aplica filtragem por data, se as datas forem fornecidas
-        if ($dataInicio && $dataFim) {
-            $dataInicio = Carbon::createFromFormat('Y-m-d', $dataInicio)->startOfDay();
-            $dataFim = Carbon::createFromFormat('Y-m-d', $dataFim)->endOfDay();
-
-            $query->whereBetween('updated_at', [$dataInicio, $dataFim]);
-        }
-
         // Obtém os produtos filtrados
         $produtosFiltrados = $query->get();
-
 
         // Extrai os IDs dos produtos filtrados
         $produtosFiltradosIds = $produtosFiltrados->pluck('id')->toArray();
@@ -163,11 +165,31 @@ class RelatorioController extends Controller
         // Realiza uma nova busca no estoque com base nos IDs dos produtos filtrados
         $estoqueProdutosFiltrados = EstoqueProduto::whereIn('produto_id', $produtosFiltradosIds)
             ->where('estoque_id', $estoque->id)
-            ->where('quantidade_atual', '>', 0)
-            ->get();
+            ->where('quantidade_atual', '>', 0);
+
+        // Filtragem por validade, se as datas forem fornecidas
+        if ($dataInicio && $dataFim) {
+            // Converte as datas de início e fim para o formato correto de validade
+            $dataInicio = Carbon::createFromFormat('Y-m-d', $dataInicio)->startOfDay(); // Começo do dia
+            $dataFim = Carbon::createFromFormat('Y-m-d', $dataFim)->endOfDay(); // Fim do dia
+
+            // Aplica a filtragem por validade (usando `whereBetween` no campo `updated_at`)
+            $estoqueProdutosFiltrados->whereBetween('updated_at', [$dataInicio, $dataFim]);
+        } elseif ($dataInicio) {
+            // Caso só tenha sido fornecida a data de início
+            $dataInicio = Carbon::createFromFormat('Y-m-d', $dataInicio)->startOfDay(); // Começo do dia
+            $estoqueProdutosFiltrados->where('updated_at', '>=', $dataInicio);
+        } elseif ($dataFim) {
+            // Caso só tenha sido fornecida a data de fim
+            $dataFim = Carbon::createFromFormat('Y-m-d', $dataFim)->endOfDay(); // Fim do dia
+            $estoqueProdutosFiltrados->where('updated_at', '<=', $dataFim);
+        }
+
+        // Obtém os estoque produtos filtrados
+        $estoqueProdutosFiltrados = $estoqueProdutosFiltrados->get();
 
         // Verifica se a coleção está vazia
-        if ($produtosFiltrados->isEmpty()) {
+        if ($produtosFiltrados->isEmpty() && $estoqueProdutosFiltrados->isEmpty()) {
             return [
                 'produtosFiltrados' => 'erro',
                 'estoqueProdutosFiltrados' => 'erro',
@@ -200,14 +222,6 @@ class RelatorioController extends Controller
             $query->where('estoque_id', $estoque->id);
         })->with('categoria'); // Carrega a relação com a categoria
 
-        // Aplica filtragem por data, se as datas forem fornecidas
-        if ($dataInicio && $dataFim) {
-            $dataInicio = Carbon::createFromFormat('Y-m-d', $dataInicio)->startOfDay();
-            $dataFim = Carbon::createFromFormat('Y-m-d', $dataFim)->endOfDay();
-
-            $query->whereBetween('updated_at', [$dataInicio, $dataFim]);
-        }
-
         // Obtém os produtos filtrados
         $produtosFiltrados = $query->get();
         // Extrai os IDs dos produtos filtrados
@@ -216,8 +230,28 @@ class RelatorioController extends Controller
         // Realiza uma nova busca no estoque com base nos IDs dos produtos filtrados
         $estoqueProdutosFiltrados = EstoqueProduto::whereIn('produto_id', $produtosFiltradosIds)
             ->where('estoque_id', $estoque->id)
-            ->where('quantidade_atual', '>', 0)
-            ->get();
+            ->where('quantidade_atual', '>', 0);
+
+        // Filtragem por validade, se as datas forem fornecidas
+        if ($dataInicio && $dataFim) {
+            // Converte as datas de início e fim para o formato correto de validade
+            $dataInicio = Carbon::createFromFormat('Y-m-d', $dataInicio)->startOfDay(); // Começo do dia
+            $dataFim = Carbon::createFromFormat('Y-m-d', $dataFim)->endOfDay(); // Fim do dia
+
+            // Aplica a filtragem por validade (usando `whereBetween` no campo `updated_at`)
+            $estoqueProdutosFiltrados->whereBetween('updated_at', [$dataInicio, $dataFim]);
+        } elseif ($dataInicio) {
+            // Caso só tenha sido fornecida a data de início
+            $dataInicio = Carbon::createFromFormat('Y-m-d', $dataInicio)->startOfDay(); // Começo do dia
+            $estoqueProdutosFiltrados->where('updated_at', '>=', $dataInicio);
+        } elseif ($dataFim) {
+            // Caso só tenha sido fornecida a data de fim
+            $dataFim = Carbon::createFromFormat('Y-m-d', $dataFim)->endOfDay(); // Fim do dia
+            $estoqueProdutosFiltrados->where('updated_at', '<=', $dataFim);
+        }
+
+        // Obtém os estoque produtos filtrados
+        $estoqueProdutosFiltrados = $estoqueProdutosFiltrados->get();
 
         // Verifica se a coleção está vazia
         if ($produtosFiltrados->isEmpty()) {
@@ -254,26 +288,37 @@ class RelatorioController extends Controller
             $query->whereIn('estoque_id', $estoquesIds);
         });
 
-        // Aplica filtragem por data, se as datas forem fornecidas
-        if ($dataInicio && $dataFim) {
-            $dataInicio = Carbon::createFromFormat('Y-m-d', $dataInicio)->startOfDay();
-            $dataFim = Carbon::createFromFormat('Y-m-d', $dataFim)->endOfDay();
-
-            $query->whereBetween('updated_at', [$dataInicio, $dataFim]);
-        }
-
         // Obtém os produtos filtrados
         $produtosFiltrados = $query->get();
 
         // Extrai os IDs dos produtos filtrados
         $produtosFiltradosIds = $produtosFiltrados->pluck('id')->toArray();
 
-        // Realiza uma nova busca nos estoques com base nos IDs dos produtos filtrados
+        // Realiza uma nova busca no estoque com base nos IDs dos produtos filtrados
         $estoqueProdutosFiltrados = EstoqueProduto::whereIn('produto_id', $produtosFiltradosIds)
-            ->whereIn('estoque_id', $estoquesIds)
-            ->where('quantidade_atual', '>', 0)
-            ->get();
+            ->where('estoque_id', $estoquesIds)
+            ->where('quantidade_atual', '>', 0);
 
+        // Filtragem por validade, se as datas forem fornecidas
+        if ($dataInicio && $dataFim) {
+            // Converte as datas de início e fim para o formato correto de validade
+            $dataInicio = Carbon::createFromFormat('Y-m-d', $dataInicio)->startOfDay(); // Começo do dia
+            $dataFim = Carbon::createFromFormat('Y-m-d', $dataFim)->endOfDay(); // Fim do dia
+
+            // Aplica a filtragem por validade (usando `whereBetween` no campo `updated_at`)
+            $estoqueProdutosFiltrados->whereBetween('updated_at', [$dataInicio, $dataFim]);
+        } elseif ($dataInicio) {
+            // Caso só tenha sido fornecida a data de início
+            $dataInicio = Carbon::createFromFormat('Y-m-d', $dataInicio)->startOfDay(); // Começo do dia
+            $estoqueProdutosFiltrados->where('updated_at', '>=', $dataInicio);
+        } elseif ($dataFim) {
+            // Caso só tenha sido fornecida a data de fim
+            $dataFim = Carbon::createFromFormat('Y-m-d', $dataFim)->endOfDay(); // Fim do dia
+            $estoqueProdutosFiltrados->where('updated_at', '<=', $dataFim);
+        }
+
+        // Obtém os estoque produtos filtrados
+        $estoqueProdutosFiltrados = $estoqueProdutosFiltrados->get();
         // Verifica se a coleção está vazia
         if ($produtosFiltrados->isEmpty()) {
             return [
@@ -316,24 +361,38 @@ class RelatorioController extends Controller
             $query->whereIn('estoque_id', $estoquesIds);
         })->where('id_categoria', $categoria->id);
 
-        // Aplica filtragem por data, se as datas forem fornecidas
-        if ($dataInicio && $dataFim) {
-            $dataInicio = Carbon::createFromFormat('Y-m-d', $dataInicio)->startOfDay();
-            $dataFim = Carbon::createFromFormat('Y-m-d', $dataFim)->endOfDay();
-
-            $query->whereBetween('updated_at', [$dataInicio, $dataFim]);
-        }
-
         // Obtém os produtos filtrados
         $produtosFiltrados = $query->get();
 
         // Extrai os IDs dos produtos filtrados
         $produtosFiltradosIds = $produtosFiltrados->pluck('id')->toArray();
 
-        // Realiza uma nova busca nos estoques com base nos IDs dos produtos filtrados
+
+        // Realiza uma nova busca no estoque com base nos IDs dos produtos filtrados
         $estoqueProdutosFiltrados = EstoqueProduto::whereIn('produto_id', $produtosFiltradosIds)
-            ->whereIn('estoque_id', $estoquesIds)
-            ->get();
+            ->where('estoque_id', $estoquesIds)
+            ->where('quantidade_atual', '>', 0);
+
+        // Filtragem por validade, se as datas forem fornecidas
+        if ($dataInicio && $dataFim) {
+            // Converte as datas de início e fim para o formato correto de validade
+            $dataInicio = Carbon::createFromFormat('Y-m-d', $dataInicio)->startOfDay(); // Começo do dia
+            $dataFim = Carbon::createFromFormat('Y-m-d', $dataFim)->endOfDay(); // Fim do dia
+
+            // Aplica a filtragem por validade (usando `whereBetween` no campo `updated_at`)
+            $estoqueProdutosFiltrados->whereBetween('updated_at', [$dataInicio, $dataFim]);
+        } elseif ($dataInicio) {
+            // Caso só tenha sido fornecida a data de início
+            $dataInicio = Carbon::createFromFormat('Y-m-d', $dataInicio)->startOfDay(); // Começo do dia
+            $estoqueProdutosFiltrados->where('updated_at', '>=', $dataInicio);
+        } elseif ($dataFim) {
+            // Caso só tenha sido fornecida a data de fim
+            $dataFim = Carbon::createFromFormat('Y-m-d', $dataFim)->endOfDay(); // Fim do dia
+            $estoqueProdutosFiltrados->where('updated_at', '<=', $dataFim);
+        }
+
+        // Obtém os estoque produtos filtrados
+        $estoqueProdutosFiltrados = $estoqueProdutosFiltrados->get();
 
         // Verifica se a coleção está vazia
         if ($produtosFiltrados->isEmpty()) {
@@ -364,23 +423,37 @@ class RelatorioController extends Controller
         // Constrói a consulta base para os produtos em todos os estoques
         $query = Produto::whereHas('estoques');
 
-        // Aplica filtragem por data, se as datas forem fornecidas
-        if ($dataInicio && $dataFim) {
-            $dataInicio = Carbon::createFromFormat('Y-m-d', $dataInicio)->startOfDay();
-            $dataFim = Carbon::createFromFormat('Y-m-d', $dataFim)->endOfDay();
-
-            $query->whereBetween('updated_at', [$dataInicio, $dataFim]);
-        }
-
         // Obtém todos os produtos filtrados
         $produtosFiltrados = $query->get();
 
         // Extrai os IDs dos produtos filtrados
         $produtosFiltradosIds = $produtosFiltrados->pluck('id')->toArray();
 
-        // Realiza uma nova busca nos estoques com base nos IDs dos produtos filtrados
+
+        // Realiza uma nova busca no estoque com base nos IDs dos produtos filtrados
         $estoqueProdutosFiltrados = EstoqueProduto::whereIn('produto_id', $produtosFiltradosIds)
-            ->get();
+            ->where('quantidade_atual', '>', 0);
+
+        // Filtragem por validade, se as datas forem fornecidas
+        if ($dataInicio && $dataFim) {
+            // Converte as datas de início e fim para o formato correto de validade
+            $dataInicio = Carbon::createFromFormat('Y-m-d', $dataInicio)->startOfDay(); // Começo do dia
+            $dataFim = Carbon::createFromFormat('Y-m-d', $dataFim)->endOfDay(); // Fim do dia
+
+            // Aplica a filtragem por validade (usando `whereBetween` no campo `updated_at`)
+            $estoqueProdutosFiltrados->whereBetween('updated_at', [$dataInicio, $dataFim]);
+        } elseif ($dataInicio) {
+            // Caso só tenha sido fornecida a data de início
+            $dataInicio = Carbon::createFromFormat('Y-m-d', $dataInicio)->startOfDay(); // Começo do dia
+            $estoqueProdutosFiltrados->where('updated_at', '>=', $dataInicio);
+        } elseif ($dataFim) {
+            // Caso só tenha sido fornecida a data de fim
+            $dataFim = Carbon::createFromFormat('Y-m-d', $dataFim)->endOfDay(); // Fim do dia
+            $estoqueProdutosFiltrados->where('updated_at', '<=', $dataFim);
+        }
+
+        // Obtém os estoque produtos filtrados
+        $estoqueProdutosFiltrados = $estoqueProdutosFiltrados->get();
 
         // Verifica se a coleção está vazia
         if ($produtosFiltrados->isEmpty()) {
@@ -411,30 +484,45 @@ class RelatorioController extends Controller
         // Constrói a consulta base para os produtos da categoria especificada
         $query = Produto::where('id_categoria', $categoria->id);
 
-        // Aplica filtragem por data, se as datas forem fornecidas
-        if ($dataInicio && $dataFim) {
-            $dataInicio = Carbon::createFromFormat('Y-m-d', $dataInicio)->startOfDay();
-            $dataFim = Carbon::createFromFormat('Y-m-d', $dataFim)->endOfDay();
-
-            $query->whereBetween('updated_at', [$dataInicio, $dataFim]);
-        }
-
         // Obtém os produtos filtrados
         $produtosFiltrados = $query->get();
 
-        // Verifica se a coleção está vazia
-        if ($produtosFiltrados->isEmpty()) {
-            return [
-                'erro' => 'Nenhum produto encontrado dessa categoria no período especificado.',
-            ];
-        }
 
         // Extrai os IDs dos produtos filtrados
         $produtosFiltradosIds = $produtosFiltrados->pluck('id')->toArray();
 
-        // Realiza uma nova busca nos estoques com base nos IDs dos produtos filtrados
+        // Realiza uma nova busca no estoque com base nos IDs dos produtos filtrados
         $estoqueProdutosFiltrados = EstoqueProduto::whereIn('produto_id', $produtosFiltradosIds)
-            ->get();
+            ->where('quantidade_atual', '>', 0);
+
+        // Filtragem por validade, se as datas forem fornecidas
+        if ($dataInicio && $dataFim) {
+            // Converte as datas de início e fim para o formato correto de validade
+            $dataInicio = Carbon::createFromFormat('Y-m-d', $dataInicio)->startOfDay(); // Começo do dia
+            $dataFim = Carbon::createFromFormat('Y-m-d', $dataFim)->endOfDay(); // Fim do dia
+
+            // Aplica a filtragem por validade (usando `whereBetween` no campo `updated_at`)
+            $estoqueProdutosFiltrados->whereBetween('updated_at', [$dataInicio, $dataFim]);
+        } elseif ($dataInicio) {
+            // Caso só tenha sido fornecida a data de início
+            $dataInicio = Carbon::createFromFormat('Y-m-d', $dataInicio)->startOfDay(); // Começo do dia
+            $estoqueProdutosFiltrados->where('updated_at', '>=', $dataInicio);
+        } elseif ($dataFim) {
+            // Caso só tenha sido fornecida a data de fim
+            $dataFim = Carbon::createFromFormat('Y-m-d', $dataFim)->endOfDay(); // Fim do dia
+            $estoqueProdutosFiltrados->where('updated_at', '<=', $dataFim);
+        }
+
+        // Obtém os estoque produtos filtrados
+        $estoqueProdutosFiltrados = $estoqueProdutosFiltrados->get();
+        // Verifica se a coleção está vazia
+        if ($produtosFiltrados->isEmpty()) {
+            return [
+                'produtosFiltrados' => 'erro',
+                'estoqueProdutosFiltrados' => 'erro',
+                'categoria' => 'erro',
+            ];
+        }
 
         // Retorna os produtos filtrados e os estoques
         return [

@@ -12,7 +12,7 @@
                         <h5>Filtros para Relatórios</h5>
                     </div>
                     <div class="card-body">
-                        <form method="GET" action="{{ route('relatorios.filtroRelatorio') }}">
+                        <form method="GET" action="{{ route('relatorios.filtroRelatorio') }}" id="relatorioForm">
                             <div class="row">
                                 <!-- Filtro por local -->
                                 <div class="col-md-6">
@@ -45,65 +45,38 @@
 
                             <div class="row align-items-end">
                                 <!-- Filtro por período -->
-                                <div class="col-md-4">
+                                <div class="col-md-2">
                                     <label for="dataInicio" class="form-label">Data Início</label>
                                     <input type="date" id="dataInicio" name="dataInicio" class="form-control">
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-2">
                                     <label for="dataFim" class="form-label">Data Fim</label>
                                     <input type="date" id="dataFim" name="dataFim" class="form-control">
                                 </div>
 
-                                <div class="col-md-2">
-                                    <label class="form-label d-block">&nbsp;</label>
-                                    <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+                                <div class="col-md-4">
+                                    <label for="formato" class="form-label">Formato</label>
+                                    <select id="formato" name="formato" class="form-select">
+                                        <option value="">Selecione</option>
+                                        <option value="csv">CSV</option>
+                                        <option value="pdf">PDF</option>
+                                    </select>
                                 </div>
+
                                 <div class="col-md-2">
                                     <label class="form-label d-block">&nbsp;</label>
-                                    <button type="submit" class="btn btn-secondary w-100">Baixar</button>
+                                    <button type="button" class="btn btn-secondary w-100" id="baixarBtn">Baixar</button>
+                                </div>
+
+                                <div class="col-md-2">
+                                    <label class="form-label d-block">&nbsp;</label>
+                                    <button type="button" class="btn btn-primary w-100" id="filtrarBtn">Filtrar</button>
                                 </div>
                             </div>
                         </form>
                     </div>
                 </div>
             </div>
-
-            {{-- <!-- Seção de downloads Colocar em um MODAL -->
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header bg-secondary text-white">
-                        <h5>Download de Relatórios</h5>
-                    </div>
-                    <div class="card-body">
-                        <form method="POST" action="#">
-                            @csrf
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <label for="formato" class="form-label">Formato</label>
-                                    <select id="formato" name="formato" class="form-select">
-                                        <option value="csv">CSV</option>
-                                        <option value="pdf">PDF</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="relatorio" class="form-label">Tipo de Relatório</label>
-                                    <select id="relatorio" name="relatorio" class="form-select">
-                                        <option value="estoques">Relatório de Estoques</option>
-                                        <option value="baixas">Relatório de Baixas</option>
-                                        <option value="financeiro">Relatório Financeiro</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div class="mt-3 text-end">
-                                <button type="submit" class="btn btn-secondary">Baixar Relatório</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div> --}}
-
-
         </div>
 
         <br>
@@ -146,11 +119,16 @@
                                 'escola' => $escola,
                             ])
                         @elseif ($filtroRelatorioGeral != null)
-
                             @include('layouts.relatorios.filtroRelatorioGeral', [
                                 'produtosFiltrados' => $produtosFiltrados,
                                 'estoqueProdutosFiltrados' => $estoqueProdutosFiltrados,
                                 'escola' => $escola,
+                            ])
+                        @elseif ($filtroRelatorioGeralPorCategoria != null)
+                            @include('layouts.relatorios.filtroRelatorioGeralPorCategoria', [
+                                'produtosFiltrados' => $produtosFiltrados,
+                                'estoqueProdutosFiltrados' => $estoqueProdutosFiltrados,
+                                'categoria' => $categoria,
                             ])
                         @else
                             <p>Por favor, aplique os filtros para visualizar os resultados.</p>
@@ -162,6 +140,41 @@
         </div>
     </div>
 @endsection
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Captura os botões
+        const form = document.getElementById('relatorioForm');
+        const baixarBtn = document.getElementById('baixarBtn');
+        const filtrarBtn = document.getElementById('filtrarBtn');
+
+        // Função para atualizar a ação do formulário com base no botão clicado
+        function setActionAndSubmit(route) {
+            form.action = route;
+            form.submit();
+        }
+
+        // Evento para o botão "Baixar"
+        baixarBtn.addEventListener('click', function() {
+            const formato = document.getElementById('formato').value;
+            if (!formato) {
+                alert('Por favor, selecione um formato para baixar.');
+                return;
+            }
+            if (formato === 'pdf') {
+                alert('Em breve, essa opção estara disponivel.');
+                return;
+            }
+            setActionAndSubmit('{{ route('relatorios.download') }}');
+        });
+
+        // Evento para o botão "Filtrar"
+        filtrarBtn.addEventListener('click', function() {
+            setActionAndSubmit('{{ route('relatorios.filtroRelatorio') }}');
+        });
+    });
+</script>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {

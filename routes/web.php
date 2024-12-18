@@ -97,6 +97,7 @@ Route::prefix('baixas')->name('baixas.')->group(function () {
 Route::prefix('relatorios')->name('relatorios.')->group(function () {
     Route::get('/listar', [RelatorioController::class, 'index'])->name('index');
     Route::get('/filtrar', [RelatorioController::class, 'filtroRelatorio'])->name('filtroRelatorio');
+    Route::get('/download', [DownloadController::class, 'downloadRelatorios'])->name('download');
 });
 Route::prefix('pedidos')->name('pedidos.')->group(function () {
     Route::get('/listar', [PedidoController::class, 'index'])->name('index');

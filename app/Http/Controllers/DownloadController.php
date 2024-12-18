@@ -8,7 +8,10 @@ use App\Models\Estoque;
 use App\Models\EstoqueProduto;
 use App\Models\Local;
 use App\Models\Produto;
+use DateTime;
+use DateTimeZone;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Response;
 
 class DownloadController extends Controller
@@ -310,10 +313,95 @@ class DownloadController extends Controller
         ]);
     }
 
-
-
     /**
      * Gera e faz o download do relatório de baixas em formato PDF
      */
     public function downloadPdf($resultado, $todos) {}
+
+    public function downloadRelatorios(Request $request)
+    {
+        // Chamar o método para filtrar os dados
+        $filtroRelatorio = new RelatorioController();
+        $resultadoFiltro = $filtroRelatorio->filtroRelatorio($request);
+        // Verificar se o formato é CSV
+        if ($request->formato == 'csv') {
+            // Cabeçalho do CSV
+            $header = [
+                'ID Escola',
+                'Nome Escola',
+                'ID Estoque',
+                'Nome Estoque',
+                'ID Produto',
+                'Nome Produto',
+                'ID Categoria',
+                'Nome Categoria',
+                'Valor Produto',
+                'Quantidade Descartada',
+                'Validade',
+                'Atualizado em',
+                'Valor Total'
+            ];
+
+            // Inicializar o conteúdo do CSV
+            $csvContent = implode(';', $header) . "\n";
+
+            // Variáveis para totais
+            $totalValor = 0;
+
+            // Iterar sobre os produtos filtrados
+            foreach ($resultadoFiltro['estoqueProdutosFiltrados'] as $estoqueProduto) {
+
+                // Obter a quantidade do produto
+                $quantidade = (float) $estoqueProduto->quantidade_atual;
+
+                // Verificar se a quantidade é maior que 0
+                if ($quantidade > 0 ) {
+
+                    // Obter o preço do produto
+                    $preco = (float) str_replace(',', '.', $estoqueProduto->produto->preco);
+
+                    // Calcular o valor total do item
+                    $valorItem = $preco * $quantidade;
+
+                    // Somar ao valor total
+                    $totalValor += $valorItem;
+
+                    // Adicionar os dados no CSV
+                    $csvContent .= implode(';', [
+                        $estoqueProduto->estoque->local->id ?? 'N/A',
+                        $estoqueProduto->estoque->local->nome_local ?? 'Local não disponível',
+                        $estoqueProduto->estoque->id ?? 'N/A',
+                        $estoqueProduto->estoque->nome_estoque ?? 'Estoque não disponível',
+                        $estoqueProduto->id ?? 'N/A',
+                        $estoqueProduto->produto->nome_produto ?? 'Produto não disponível',
+                        $estoqueProduto->produto->categoria->id ?? 'N/A',
+                        $estoqueProduto->produto->categoria->nome_categoria ?? 'Categoria não disponível',
+                        number_format($preco, 2, ',', '.'),
+                        number_format($quantidade, 0, ',', '.'),
+                        $estoqueProduto->validade ? \Carbon\Carbon::parse($estoqueProduto->validade)->format('d-m-Y') : 'Sem validade',
+                        $estoqueProduto->updated_at ? \Carbon\Carbon::parse($estoqueProduto->updated_at)->format('d-m-Y') : 'Sem data de atualização',
+                        number_format($valorItem, 2, ',', '.')
+                    ]) . "\n";
+                }
+            }
+
+            // Adicionar linha de totais
+            $csvContent .= implode(';', [
+                'TOTAL',
+                number_format($totalValor, 2, ',', '.')
+            ]) . "\n";
+
+            $timezone = new DateTimeZone('America/Sao_Paulo');
+            $data = new DateTime('now', $timezone);
+            $nomeArquivo = 'relatorio_' . $data->format('d-m-Y') . '_estoques.csv';
+
+            // Retornar o arquivo CSV para download
+            return response()->make($csvContent, 200, [
+                'Content-Type' => 'text/csv',
+                'Content-Disposition' => 'attachment; filename="' . $nomeArquivo . '"',
+            ]);
+        }
+
+        // Caso o formato não seja CSV, outras lógicas podem ser implementadas
+    }
 }
