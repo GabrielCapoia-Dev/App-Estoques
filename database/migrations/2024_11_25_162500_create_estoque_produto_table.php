@@ -15,8 +15,8 @@ class CreateEstoqueProdutoTable extends Migration
     {
         Schema::create('estoque_produto', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('produto_id')->constrained('produtos')->onDelete('cascade'); // Relacionamento com produtos
-            $table->foreignId('estoque_id')->constrained('estoques')->onDelete('cascade'); // Relacionamento com estoques
+            $table->foreignId('produto_id')->constrained('produtos')->onDelete('cascade');
+            $table->foreignId('estoque_id')->constrained('estoques')->onDelete('cascade');
             $table->string('quantidade_atual');
             $table->string('quantidade_minima');
             $table->string('quantidade_maxima');

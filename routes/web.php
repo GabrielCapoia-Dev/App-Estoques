@@ -100,3 +100,12 @@ Route::prefix('relatorios')->name('relatorios.')->group(function () {
     Route::get('/download', [DownloadController::class, 'downloadRelatorios'])->name('download');
     Route::get('/download/baixas', [DownloadController::class, 'downloadRelatoriosBaixas'])->name('download.baixas');
 });
+
+Route::prefix('pedidos')->name('pedidos.')->group(function () {
+    Route::get('/listar', [PedidoController::class, 'index'])->name('index');
+    Route::get('/create', [PedidoController::class, 'create'])->name('create');
+    Route::post('/store', [PedidoController::class, 'store'])->name('store');
+    Route::get('/{pedido}/edit', [PedidoController::class, 'edit'])->name('edit');
+    Route::put('/{pedido}/update', [PedidoController::class, 'update'])->name('update');
+    Route::get('/filtrar', [PedidoController::class, 'filtrarPedidos'])->name('filtrar');
+});

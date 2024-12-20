@@ -24,4 +24,14 @@ class EstoqueProduto extends Model
     {
         return $this->hasMany(DescarteProdutos::class, 'id_estoque_produto');
     }
+    public function pedidos()
+    {
+        return $this->belongsToMany(Pedido::class, 'estoque_produto_pedido')
+            ->withPivot('quantidade', 'preco_unitario') // Colunas adicionais
+            ->withTimestamps();
+    }
+    public function estoqueProdutoPedidos()
+    {
+        return $this->hasMany(EstoqueProdutoPedido::class, 'estoque_produto_id');
+    }
 }

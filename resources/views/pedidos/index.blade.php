@@ -5,44 +5,44 @@
         <h1 class="h3">Pedidos de Estoque</h1>
         <!-- Botão para adicionar novo pedido -->
         <div class="mb-2">
-            <a href="#" class="btn btn-secondary"><i class="fa-solid fa-arrow-left"></i> Voltar</a>
-            <a href="#" class="btn btn-success"><i class="fa-solid fa-plus"></i> Novo</a>
+            <a href="{{ route('pedidos.create') }}" class="btn btn-success"><i class="fa-solid fa-plus"></i> Novo</a>
         </div>
 
-
-        <!-- Seção de seleção de local -->
+        <!-- Seção de seleção de filtros -->
         <div class="card mb-4">
             <div class="card-header bg-primary text-white">
                 <h5>Filtrar</h5>
             </div>
             <div class="card-body">
-                <form method="GET" action="#">
+                <form method="GET" action="{{ route('pedidos.index') }}">
                     <div class="row align-items-end">
                         <div class="col-md-3">
                             <label for="local" class="form-label">Escola</label>
                             <select id="local" name="local" class="form-select">
                                 <option value="">Selecione um local</option>
                                 @foreach ($locals as $local)
-                                    <option value="{{ $local->id }}">{{ $local->nome_local }}</option>
+                                    <option value="{{ $local->id }}" {{ request('local') == $local->id ? 'selected' : '' }}>
+                                        {{ $local->nome_local }}
+                                    </option>
                                 @endforeach
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <label for="local" class="form-label">Status do Pedido</label>
-                            <select id="local" name="local" class="form-select">
+                            <label for="status" class="form-label">Status do Pedido</label>
+                            <select id="status" name="status" class="form-select">
                                 <option value="">Selecione</option>
-                                <option value="">Pendente</option>
-                                <option value="">Concluido</option>
-
+                                <option value="pendente" {{ request('status') == 'pendente' ? 'selected' : '' }}>Pendente</option>
+                                <option value="confirmado" {{ request('status') == 'confirmado' ? 'selected' : '' }}>Confirmado</option>
+                                <option value="concluido" {{ request('status') == 'concluido' ? 'selected' : '' }}>Concluído</option>
                             </select>
                         </div>
                         <div class="col-md-2">
                             <label for="dataInicio" class="form-label">Data Início</label>
-                            <input type="date" id="dataInicio" name="dataInicio" class="form-control">
+                            <input type="date" id="dataInicio" name="dataInicio" class="form-control" value="{{ request('dataInicio') }}">
                         </div>
                         <div class="col-md-2">
                             <label for="dataFim" class="form-label">Data Fim</label>
-                            <input type="date" id="dataFim" name="dataFim" class="form-control">
+                            <input type="date" id="dataFim" name="dataFim" class="form-control" value="{{ request('dataFim') }}">
                         </div>
                         <div class="col-md-3">
                             <button type="submit" class="btn btn-primary w-100">Filtrar</button>
@@ -51,7 +51,6 @@
                 </form>
             </div>
         </div>
-
 
         <!-- Seção de pedidos -->
         <div class="card">
@@ -72,43 +71,30 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <!-- Substitua por dados reais -->
-                        <tr>
-                            <td>1</td>
-                            <td>Benjamin</td>
-                            <td>Pedido A</td>
-                            <td>R$ 1.375,20</td>
-                            <td>2025-01-16</td>
-                            <td>Pendente</td>
-                            <td>
-                                <button class="btn btn-sm btn-info"><i class="fa-regular fa-eye"></i></button>
-                                <button class="btn btn-sm btn-warning"><i class="fa-solid fa-pen-to-square"></i></button>
-                                <button class="btn btn-sm btn-danger"><i class="fa-solid fa-ban"></i></button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>2</td>
-                            <td>Analides</td>
-                            <td>Pedido B</td>
-                            <td>R$ 3.418,92</td>
-                            <td>2024-12-15</td>
-                            <td>Concluído</td>
-                            <td>
-                                <button class="btn btn-sm btn-info"><i class="fa-regular fa-eye"></i></button>
-                            </td>
-                        </tr>
+                        @foreach ($pedidos as $pedido)
+                            <tr>
+                                <td>{{ $pedido->id }}</td>
+                                <td>{{ $pedido->local->nome_local }}</td>
+                                <td>{{ $pedido->nome_pedido }}</td>
+                                <td>R$ {{ number_format($pedido->valor_total, 2, ',', '.') }}</td>
+                                <td>{{ \Carbon\Carbon::parse($pedido->data_prevista)->format('Y-m-d') }}</td>
+                                <td>{{ ucfirst($pedido->status) }}</td>
+                                <td>
+                                    <a href="{{ route('pedidos.show', $pedido->id) }}" class="btn btn-sm btn-info"><i class="fa-regular fa-eye"></i></a>
+                                    <a href="{{ route('pedidos.edit', $pedido->id) }}" class="btn btn-sm btn-warning"><i class="fa-solid fa-pen-to-square"></i></a>
+                                    <form action="{{ route('pedidos.destroy', $pedido->id) }}" method="POST" style="display:inline;">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-sm btn-danger"><i class="fa-solid fa-ban"></i></button>
+                                    </form>
+                                </td>
+                            </tr>
+                        @endforeach
                     </tbody>
                 </table>
 
                 <!-- Paginação -->
-                <nav>
-                    <ul class="pagination justify-content-end">
-                        <li class="page-item disabled"><a class="page-link" href="#">Anterior</a></li>
-                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                        <li class="page-item"><a class="page-link" href="#">2</a></li>
-                        <li class="page-item"><a class="page-link" href="#">Próximo</a></li>
-                    </ul>
-                </nav>
+                {{ $pedidos->links() }}
             </div>
         </div>
 

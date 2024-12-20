@@ -29,4 +29,8 @@ class Local extends Model
     {
         return $this->hasMany(Estoque::class, 'id_local');
     }
+    public function pedidos()
+    {
+        return $this->hasMany(Pedido::class, 'id_local');
+    }
 }
