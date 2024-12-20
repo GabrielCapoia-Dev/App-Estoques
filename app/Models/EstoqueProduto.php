@@ -19,4 +19,9 @@ class EstoqueProduto extends Model
     {
         return $this->belongsTo(Produto::class, 'produto_id');
     }
+
+    public function descartes()
+    {
+        return $this->hasMany(DescarteProdutos::class, 'id_estoque_produto');
+    }
 }

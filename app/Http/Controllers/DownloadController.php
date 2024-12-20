@@ -21,7 +21,7 @@ class DownloadController extends Controller
      * Gerar download do relatório chamando o metodo de conversão
      * no formato do arquivo
      */
-    public function download(Request $request)
+    public function downloadBaixas(Request $request)
     {
 
         $valorTotalBaixaGeral = 0;
@@ -318,8 +318,110 @@ class DownloadController extends Controller
      */
     public function downloadPdf($resultado, $todos) {}
 
+
+    public function downloadRelatoriosBaixas(Request $request)
+    {
+        $baixaForm = $request->input('baixa');
+
+        if ($baixaForm == 'true') {
+
+            // Chamar o método para filtrar os dados
+            $filtroRelatorio = new RelatorioController();
+            $resultadoFiltro = $filtroRelatorio->filtroRelatorio($request);
+
+            // dd($resultadoFiltro);
+
+            // Verificar se o formato é CSV
+            if ($request->formato == 'csv') {
+                // Cabeçalho do CSV
+                $header = [
+                    'ID Baixa',
+                    'ID Escola',
+                    'Nome Escola',
+                    'ID Estoque',
+                    'Nome Estoque',
+                    'ID Produto',
+                    'Nome Produto',
+                    'ID Categoria',
+                    'Nome Categoria',
+                    'Valor Produto',
+                    'Quantidade Descarte',
+                    'Motivo Descarte',
+                    'Validade',
+                    'Atualizado em',
+                    'Valor Total'
+                ];
+
+                // Inicializar o conteúdo do CSV
+                $csvContent = implode(';', $header) . "\n";
+
+                // Variáveis para totais
+                $totalValor = 0;
+
+                // Iterar sobre os produtos filtrados
+                foreach ($resultadoFiltro['estoqueProdutosFiltrados'] as $estoqueProduto) {
+                    foreach ($estoqueProduto->descartes as $descarte) {
+                        // Verificar se o descarte está preenchido
+                        if (!empty($descarte)) {
+                            // Obter a quantidade do produto
+                            $quantidade = (int) $descarte->quantidade_descarte;
+                            
+                            // Obter o preço do produto
+                            $preco = (float) str_replace(',', '.', $estoqueProduto->produto->preco);
+                            
+                            // Calcular o valor total do item
+                            $valorItem = $preco * $quantidade;
+                            
+                            // Somar ao valor total
+                            $totalValor += $valorItem;
+
+                            // Adicionar os dados no CSV
+                            $csvContent .= implode(';', [
+                                $estoqueProduto->id ?? 'N/A',
+                                $estoqueProduto->estoque->local->id ?? 'N/A',
+                                $estoqueProduto->estoque->local->nome_local ?? 'Local não disponível',
+                                $estoqueProduto->estoque->id ?? 'N/A',
+                                $estoqueProduto->estoque->nome_estoque ?? 'Estoque não disponível',
+                                $estoqueProduto->produto->id ?? 'N/A',
+                                $estoqueProduto->produto->nome_produto ?? 'Produto não disponível',
+                                $estoqueProduto->produto->categoria->id ?? 'N/A',
+                                $estoqueProduto->produto->categoria->nome_categoria ?? 'Categoria não disponível',
+                                number_format($preco, 2, ',', '.'),
+                                $quantidade ?? 'N/A',
+                                $descarte->defeito_descarte ?? 'Sem descarte',
+                                $estoqueProduto->validade ? \Carbon\Carbon::parse($estoqueProduto->validade)->format('d-m-Y') : 'Sem validade',
+                                $estoqueProduto->updated_at ? \Carbon\Carbon::parse($estoqueProduto->updated_at)->format('d-m-Y') : 'Sem data de atualização',
+                                number_format($valorItem, 2, ',', '.')
+                            ]) . "\n";
+                        }
+                    }
+                }
+
+                // Adicionar linha de totais
+                $csvContent .= implode(';', [
+                    'TOTAL',
+                    number_format($totalValor, 2, ',', '.')
+                ]) . "\n";
+
+                $timezone = new DateTimeZone('America/Sao_Paulo');
+                $data = new DateTime('now', $timezone);
+                $nomeArquivo = 'relatorio_' . $data->format('d-m-Y') . '_baixas_estoques.csv';
+
+                // Retornar o arquivo CSV para download
+                return response()->make($csvContent, 200, [
+                    'Content-Type' => 'text/csv',
+                    'Content-Disposition' => 'attachment; filename="' . $nomeArquivo . '"',
+                ]);
+            }
+
+            // Caso o formato não seja CSV, outras lógicas podem ser implementadas
+        }
+    }
+
+
     public function downloadRelatorios(Request $request)
     {
+
         // Chamar o método para filtrar os dados
         $filtroRelatorio = new RelatorioController();
         $resultadoFiltro = $filtroRelatorio->filtroRelatorio($request);
@@ -355,7 +457,7 @@ class DownloadController extends Controller
                 $quantidade = (float) $estoqueProduto->quantidade_atual;
 
                 // Verificar se a quantidade é maior que 0
-                if ($quantidade > 0 ) {
+                if ($quantidade > 0) {
 
                     // Obter o preço do produto
                     $preco = (float) str_replace(',', '.', $estoqueProduto->produto->preco);

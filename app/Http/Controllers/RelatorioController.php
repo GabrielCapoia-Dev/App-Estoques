@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Categoria;
+use App\Models\DescarteProdutos;
 use App\Models\Estoque;
 use App\Models\EstoqueProduto;
 use App\Models\Local;
@@ -37,16 +38,65 @@ class RelatorioController extends Controller
      */
     public function filtroRelatorio(Request $request)
     {
-
         // Obter os filtros da requisição
+        $defeito_descarte = $request->input('defeito_descarte') ?? null;
         $localId = $request->input('local');
         $estoqueId = $request->input('estoque');
         $categoriaId = $request->input('categoria');
         $dataInicio = $request->input('dataInicio');
         $dataFim = $request->input('dataFim');
+        $baixaForm = $request->input('baixa');
+
+
+        $locals = Local::all();
+        $estoqueController = new EstoqueController();
+        $resultado = [];
+        $valorTotalBaixaGeral = 0;
+        $valorTotalEstoqueGeral = 0;
+
+        foreach ($locals as $local) {
+
+            $requestMock = Request::create('', 'GET', ['status_estoque' => 'Ativo']);
+
+            $totalEstoque = floatval(str_replace(',', '.', str_replace('.', '', $estoqueController->index($requestMock, $local->id)['totalEstoque'] ?? '0')));
+            $totalBaixas = floatval(str_replace(',', '.', str_replace('.', '', $estoqueController->index($requestMock, $local->id)['totalBaixa'] ?? '0')));
+
+
+            $valorTotalBaixaGeral += $totalBaixas;
+            $valorTotalEstoqueGeral += $totalEstoque;
+
+            $resultado[] = [
+                'idLocal' => $local->id,
+                'local' => $local->nome_local,
+                'valorTotalEstoque' => $totalEstoque,
+                'valorTotalBaixa' => $totalBaixas,
+            ];
+        }
+
+        // Formatação dos totais gerais
+        $totalBaixaGeralFormatado = number_format($valorTotalBaixaGeral, 2, ',', '.');
+
+        $totalEstoqueGeralFormatado = number_format($valorTotalEstoqueGeral, 2, ',', '.');
+
 
         if ($localId != null && $estoqueId != null && $categoriaId != null) {
-            $filtro = $this->filtroRelatorioCategoria($localId, $estoqueId, $categoriaId, $dataInicio, $dataFim);
+            $filtro = $this->filtroRelatorioCategoria($localId, $estoqueId, $categoriaId, $dataInicio, $dataFim, $defeito_descarte);
+            if ($baixaForm != null) {
+                return view('baixas.index', [
+                    'categorias' => Categoria::all(),
+                    'locals' => Local::all(),
+                    'resultado' => $resultado,
+                    'filtroRelatorioCategoria' => $filtro,
+                    'produtosFiltrados' => $filtro['produtosFiltrados'],
+                    'estoqueProdutosFiltrados' => $filtro['estoqueProdutosFiltrados'],
+                    'categoriaProdutosFiltrados' => $filtro['categoria'],
+                    'estoque' => $filtro['estoque'],
+                    'escola' => $filtro['local'],
+                    'totalBaixaGeralFormatado' => $totalBaixaGeralFormatado,
+                    'totalEstoqueGeralFormatado' => $totalEstoqueGeralFormatado,
+                ]);
+            }
+
 
             return view('relatorios.index', [
                 'locals' => Local::all(),
@@ -61,8 +111,26 @@ class RelatorioController extends Controller
         }
 
         if ($localId != null && $estoqueId != null && $categoriaId == null) {
-            $filtro = $this->filtroRelatorioEstoque($localId, $estoqueId, $dataInicio, $dataFim);
-            // dd(json_encode($filtro, JSON_PRETTY_PRINT));
+            $filtro = $this->filtroRelatorioEstoque($localId, $estoqueId, $dataInicio, $dataFim, $defeito_descarte);
+
+            if ($baixaForm != null) {
+
+                return view('baixas.index', [
+                    'locals' => Local::all(),
+                    'categorias' => Categoria::all(),
+                    'resultado' => $resultado,
+                    'filtroRelatorioCategoria' => null,
+                    'filtroRelatorioEstoque' => $filtro,
+                    'produtosFiltrados' => $filtro['produtosFiltrados'],
+                    'estoqueProdutosFiltrados' => $filtro['estoqueProdutosFiltrados'],
+                    'estoque' => $filtro['estoque'],
+                    'escola' => $filtro['local'],
+                    'totalBaixaGeralFormatado' => $totalBaixaGeralFormatado,
+                    'totalEstoqueGeralFormatado' => $totalEstoqueGeralFormatado,
+                ]);
+            }
+
+
             return view('relatorios.index', [
                 'locals' => Local::all(),
                 'categorias' => Categoria::all(),
@@ -76,7 +144,27 @@ class RelatorioController extends Controller
         }
 
         if ($localId != null && $estoqueId == null && $categoriaId == null) {
-            $filtro = $this->filtroRelatorioLocal($localId, $dataInicio, $dataFim);
+            $filtro = $this->filtroRelatorioLocal($localId, $dataInicio, $dataFim, $defeito_descarte);
+
+            if ($baixaForm != null) {
+
+                return view('baixas.index', [
+                    'categorias' => Categoria::all(),
+                    'locals' => Local::all(),
+                    'resultado' => $resultado,
+                    'filtroRelatorioCategoria' => null,
+                    'filtroRelatorioEstoque' => null,
+                    'filtroRelatorioLocal' => $filtro,
+                    'produtosFiltrados' => $filtro['produtosFiltrados'],
+                    'estoqueProdutosFiltrados' => $filtro['estoqueProdutosFiltrados'],
+                    'estoque' => $filtro['estoque'],
+                    'escola' => $filtro['local'],
+                    'totalBaixaGeralFormatado' => $totalBaixaGeralFormatado,
+                    'totalEstoqueGeralFormatado' => $totalEstoqueGeralFormatado,
+                ]);
+            }
+
+
             return view('relatorios.index', [
                 'locals' => Local::all(),
                 'categorias' => Categoria::all(),
@@ -91,7 +179,26 @@ class RelatorioController extends Controller
         }
 
         if (($localId != null && $categoriaId != null) && $estoqueId == null) {
-            $filtro = $this->filtroRelatorioPorLocalECategoria($localId, $categoriaId, $dataInicio, $dataFim);
+            $filtro = $this->filtroRelatorioPorLocalECategoria($localId, $categoriaId, $dataInicio, $dataFim, $defeito_descarte);
+
+            if ($baixaForm != null) {
+
+                return view('baixas.index', [
+                    'categorias' => Categoria::all(),
+                    'locals' => Local::all(),
+                    'resultado' => $resultado,
+                    'filtroRelatorioCategoria' => null,
+                    'filtroRelatorioEstoque' => null,
+                    'filtroRelatorioLocal' => null,
+                    'filtroRelatorioPorLocalECategoria' => $filtro,
+                    'produtosFiltrados' => $filtro['produtosFiltrados'],
+                    'estoqueProdutosFiltrados' => $filtro['estoqueProdutosFiltrados'],
+                    'estoque' => $filtro['estoque'],
+                    'escola' => $filtro['local'],
+                    'totalBaixaGeralFormatado' => $totalBaixaGeralFormatado,
+                    'totalEstoqueGeralFormatado' => $totalEstoqueGeralFormatado,
+                ]);
+            }
             return view('relatorios.index', [
                 'locals' => Local::all(),
                 'categorias' => Categoria::all(),
@@ -107,8 +214,26 @@ class RelatorioController extends Controller
         }
 
         if ($localId == null && $categoriaId == null && $estoqueId == null) {
-            // dd('Geral');
-            $filtro = $this->filtroRelatorioGeral($dataInicio, $dataFim);
+            $filtro = $this->filtroRelatorioGeral($dataInicio, $dataFim, $defeito_descarte);
+
+            if ($baixaForm != null) {
+                return view('baixas.index', [
+                    'categorias' => Categoria::all(),
+                    'locals' => Local::all(),
+                    'resultado' => $resultado,
+                    'filtroRelatorioCategoria' => null,
+                    'filtroRelatorioEstoque' => null,
+                    'filtroRelatorioLocal' => null,
+                    'filtroRelatorioPorLocalECategoria' => null,
+                    'filtroRelatorioGeral' => $filtro,
+                    'produtosFiltrados' => $filtro['produtosFiltrados'],
+                    'estoqueProdutosFiltrados' => $filtro['estoqueProdutosFiltrados'],
+                    'escola' => $filtro['local'],
+                    'totalBaixaGeralFormatado' => $totalBaixaGeralFormatado,
+                    'totalEstoqueGeralFormatado' => $totalEstoqueGeralFormatado,
+                ]);
+            }
+
             return view('relatorios.index', [
                 'locals' => Local::all(),
                 'categorias' => Categoria::all(),
@@ -124,7 +249,28 @@ class RelatorioController extends Controller
         }
 
         if ($localId == null && $categoriaId != null && $estoqueId == null) {
-            $filtro = $this->filtroRelatorioGeralPorCategoria($categoriaId, $dataInicio, $dataFim);
+            $filtro = $this->filtroRelatorioGeralPorCategoria($categoriaId, $dataInicio, $dataFim, $defeito_descarte);
+            if ($baixaForm != null) {
+
+                return view('baixas.index', [
+                    'categorias' => Categoria::all(),
+                    'locals' => Local::all(),
+                    'resultado' => $resultado,
+                    'filtroRelatorioCategoria' => null,
+                    'filtroRelatorioEstoque' => null,
+                    'filtroRelatorioLocal' => null,
+                    'filtroRelatorioPorLocalECategoria' => null,
+                    'filtroRelatorioGeral' => null,
+                    'filtroRelatorioGeralPorCategoria' => $filtro,
+                    'produtosFiltrados' => $filtro['produtosFiltrados'],
+                    'estoqueProdutosFiltrados' => $filtro['estoqueProdutosFiltrados'],
+                    'categoriaProdutosFiltrados' => $filtro['categoria'],
+                    'totalBaixaGeralFormatado' => $totalBaixaGeralFormatado,
+                    'totalEstoqueGeralFormatado' => $totalEstoqueGeralFormatado,
+                ]);
+            }
+
+
             return view('relatorios.index', [
                 'locals' => Local::all(),
                 'categorias' => Categoria::all(),
@@ -145,7 +291,7 @@ class RelatorioController extends Controller
     /**
      * Filtragem de produtos no estoque, com base na categoria solicitada
      */
-    public function filtroRelatorioCategoria($localId, $estoqueId, $categoriaId, $dataInicio = null, $dataFim = null)
+    public function filtroRelatorioCategoria($localId, $estoqueId, $categoriaId, $dataInicio = null, $dataFim = null, $defeito_descarte = null)
     {
         // Recupera o estoque e a categoria
         $local = Local::findOrFail($localId);
@@ -165,7 +311,8 @@ class RelatorioController extends Controller
         // Realiza uma nova busca no estoque com base nos IDs dos produtos filtrados
         $estoqueProdutosFiltrados = EstoqueProduto::whereIn('produto_id', $produtosFiltradosIds)
             ->where('estoque_id', $estoque->id)
-            ->where('quantidade_atual', '>', 0);
+            ->with('descartes');
+
 
         // Filtragem por validade, se as datas forem fornecidas
         if ($dataInicio && $dataFim) {
@@ -191,6 +338,7 @@ class RelatorioController extends Controller
         // Verifica se a coleção está vazia
         if ($produtosFiltrados->isEmpty() && $estoqueProdutosFiltrados->isEmpty()) {
             return [
+                'baixaProdutos' => 'erro',
                 'produtosFiltrados' => 'erro',
                 'estoqueProdutosFiltrados' => 'erro',
                 'categoria' => 'erro',
@@ -198,6 +346,31 @@ class RelatorioController extends Controller
                 'local' => 'erro',
             ];
         }
+
+        if ($defeito_descarte != null) {
+
+            // Filtra os produtos no estoque que possuem descartes com o defeito especificado
+            $estoqueProdutosFiltrados = EstoqueProduto::whereIn('produto_id', $produtosFiltradosIds)
+                ->where('estoque_id', $estoque->id)
+                ->whereHas('descartes', function ($query) use ($defeito_descarte) {
+                    $query->where('defeito_descarte', $defeito_descarte);
+                })
+                ->with(['descartes' => function ($query) use ($defeito_descarte) {
+                    $query->where('defeito_descarte', $defeito_descarte);
+                }])
+                ->get();
+
+            // Retorna os produtos filtrados e a categoria
+            return [
+                'produtosFiltrados' => $produtosFiltrados,
+                'estoqueProdutosFiltrados' => $estoqueProdutosFiltrados,
+                'categoria' => $categoria,
+                'estoque' => $estoque,
+                'local' => $local,
+            ];
+        }
+
+
         // Retorna os produtos filtrados e a categoria
         return [
             'produtosFiltrados' => $produtosFiltrados,
@@ -211,7 +384,7 @@ class RelatorioController extends Controller
     /**
      * Filtragem de produtos no estoque
      */
-    public function filtroRelatorioEstoque($localId, $estoqueId, $dataInicio = null, $dataFim = null)
+    public function filtroRelatorioEstoque($localId, $estoqueId, $dataInicio = null, $dataFim = null, $defeito_descarte = null)
     {
         // Recupera o local e o estoque
         $local = Local::findOrFail($localId);
@@ -230,7 +403,7 @@ class RelatorioController extends Controller
         // Realiza uma nova busca no estoque com base nos IDs dos produtos filtrados
         $estoqueProdutosFiltrados = EstoqueProduto::whereIn('produto_id', $produtosFiltradosIds)
             ->where('estoque_id', $estoque->id)
-            ->where('quantidade_atual', '>', 0);
+            ->with('descartes');
 
         // Filtragem por validade, se as datas forem fornecidas
         if ($dataInicio && $dataFim) {
@@ -254,14 +427,41 @@ class RelatorioController extends Controller
         $estoqueProdutosFiltrados = $estoqueProdutosFiltrados->get();
 
         // Verifica se a coleção está vazia
-        if ($produtosFiltrados->isEmpty()) {
+        if ($produtosFiltrados->isEmpty() && $estoqueProdutosFiltrados->isEmpty()) {
             return [
+                'baixaProdutos' => 'erro',
                 'produtosFiltrados' => 'erro',
                 'estoqueProdutosFiltrados' => 'erro',
+                'categoria' => 'erro',
                 'estoque' => 'erro',
                 'local' => 'erro',
             ];
         }
+
+
+        if ($defeito_descarte != null) {
+
+            // Filtra os produtos no estoque que possuem descartes com o defeito especificado
+            $estoqueProdutosFiltrados = EstoqueProduto::whereIn('produto_id', $produtosFiltradosIds)
+                ->where('estoque_id', $estoque->id)
+                ->whereHas('descartes', function ($query) use ($defeito_descarte) {
+                    $query->where('defeito_descarte', $defeito_descarte);
+                })
+                ->with(['descartes' => function ($query) use ($defeito_descarte) {
+                    $query->where('defeito_descarte', $defeito_descarte);
+                }])
+                ->get();
+
+            // Retorna os produtos filtrados e a categoria
+            return [
+                'produtosFiltrados' => $produtosFiltrados,
+                'estoqueProdutosFiltrados' => $estoqueProdutosFiltrados,
+                'estoque' => $estoque,
+                'local' => $local,
+            ];
+        }
+
+
         // Retorna os produtos filtrados, suas categorias, o estoque e o local
         return [
             'produtosFiltrados' => $produtosFiltrados,
@@ -275,7 +475,7 @@ class RelatorioController extends Controller
     /**
      * Filtragem de produtos no estoque
      */
-    public function filtroRelatorioLocal($localId, $dataInicio = null, $dataFim = null)
+    public function filtroRelatorioLocal($localId, $dataInicio = null, $dataFim = null, $defeito_descarte)
     {
         // Recupera o local
         $local = Local::findOrFail($localId);
@@ -297,7 +497,7 @@ class RelatorioController extends Controller
         // Realiza uma nova busca no estoque com base nos IDs dos produtos filtrados
         $estoqueProdutosFiltrados = EstoqueProduto::whereIn('produto_id', $produtosFiltradosIds)
             ->where('estoque_id', $estoquesIds)
-            ->where('quantidade_atual', '>', 0);
+            ->with('descartes');
 
         // Filtragem por validade, se as datas forem fornecidas
         if ($dataInicio && $dataFim) {
@@ -319,15 +519,41 @@ class RelatorioController extends Controller
 
         // Obtém os estoque produtos filtrados
         $estoqueProdutosFiltrados = $estoqueProdutosFiltrados->get();
+
         // Verifica se a coleção está vazia
-        if ($produtosFiltrados->isEmpty()) {
+        if ($produtosFiltrados->isEmpty() && $estoqueProdutosFiltrados->isEmpty()) {
             return [
+                'baixaProdutos' => 'erro',
                 'produtosFiltrados' => 'erro',
                 'estoqueProdutosFiltrados' => 'erro',
+                'categoria' => 'erro',
                 'estoque' => 'erro',
                 'local' => 'erro',
             ];
         }
+
+        if ($defeito_descarte != null) {
+
+            // Filtra os produtos no estoque que possuem descartes com o defeito especificado
+            $estoqueProdutosFiltrados = EstoqueProduto::whereIn('produto_id', $produtosFiltradosIds)
+                ->where('estoque_id', $estoquesIds)
+                ->whereHas('descartes', function ($query) use ($defeito_descarte) {
+                    $query->where('defeito_descarte', $defeito_descarte);
+                })
+                ->with(['descartes' => function ($query) use ($defeito_descarte) {
+                    $query->where('defeito_descarte', $defeito_descarte);
+                }])
+                ->get();
+
+            // Retorna os produtos filtrados e a categoria
+            return [
+                'produtosFiltrados' => $produtosFiltrados,
+                'estoqueProdutosFiltrados' => $estoqueProdutosFiltrados,
+                'estoque' => Estoque::where('id_local', $local->id)->get(),
+                'local' => $local,
+            ];
+        }
+
 
         // Retorna os produtos filtrados, os estoques filtrados e o local
         return [
@@ -341,7 +567,7 @@ class RelatorioController extends Controller
     /**
      * Filtragem de produtos em todos os estoques de um local, com base na categoria solicitada
      */
-    public function filtroRelatorioPorLocalECategoria($localId, $categoriaId, $dataInicio = null, $dataFim = null)
+    public function filtroRelatorioPorLocalECategoria($localId, $categoriaId, $dataInicio = null, $dataFim = null, $defeito_descarte)
     {
         // Recupera o local e a categoria
         $local = Local::findOrFail($localId);
@@ -371,7 +597,7 @@ class RelatorioController extends Controller
         // Realiza uma nova busca no estoque com base nos IDs dos produtos filtrados
         $estoqueProdutosFiltrados = EstoqueProduto::whereIn('produto_id', $produtosFiltradosIds)
             ->where('estoque_id', $estoquesIds)
-            ->where('quantidade_atual', '>', 0);
+            ->with('descartes');
 
         // Filtragem por validade, se as datas forem fornecidas
         if ($dataInicio && $dataFim) {
@@ -395,13 +621,36 @@ class RelatorioController extends Controller
         $estoqueProdutosFiltrados = $estoqueProdutosFiltrados->get();
 
         // Verifica se a coleção está vazia
-        if ($produtosFiltrados->isEmpty()) {
+        if ($produtosFiltrados->isEmpty() && $estoqueProdutosFiltrados->isEmpty()) {
             return [
+                'baixaProdutos' => 'erro',
                 'produtosFiltrados' => 'erro',
                 'estoqueProdutosFiltrados' => 'erro',
+                'categoria' => 'erro',
                 'estoque' => 'erro',
                 'local' => 'erro',
-                'categoria' => 'erro',
+            ];
+        }
+
+        if ($defeito_descarte != null) {
+
+            // Filtra os produtos no estoque que possuem descartes com o defeito especificado
+            $estoqueProdutosFiltrados = EstoqueProduto::whereIn('produto_id', $produtosFiltradosIds)
+                ->where('estoque_id', $estoquesIds)
+                ->whereHas('descartes', function ($query) use ($defeito_descarte) {
+                    $query->where('defeito_descarte', $defeito_descarte);
+                })
+                ->with(['descartes' => function ($query) use ($defeito_descarte) {
+                    $query->where('defeito_descarte', $defeito_descarte);
+                }])
+                ->get();
+
+            // Retorna os produtos filtrados e a categoria
+            return [
+                'produtosFiltrados' => $produtosFiltrados,
+                'estoqueProdutosFiltrados' => $estoqueProdutosFiltrados,
+                'estoque' => Estoque::where('id_local', $local->id)->get(),
+                'local' => $local,
             ];
         }
 
@@ -418,7 +667,7 @@ class RelatorioController extends Controller
     /**
      * Filtragem de todos os produtos de todos os estoques de todos os locais
      */
-    public function filtroRelatorioGeral($dataInicio = null, $dataFim = null)
+    public function filtroRelatorioGeral($dataInicio = null, $dataFim = null, $defeito_descarte)
     {
         // Constrói a consulta base para os produtos em todos os estoques
         $query = Produto::whereHas('estoques');
@@ -432,7 +681,7 @@ class RelatorioController extends Controller
 
         // Realiza uma nova busca no estoque com base nos IDs dos produtos filtrados
         $estoqueProdutosFiltrados = EstoqueProduto::whereIn('produto_id', $produtosFiltradosIds)
-            ->where('quantidade_atual', '>', 0);
+            ->with('descartes');
 
         // Filtragem por validade, se as datas forem fornecidas
         if ($dataInicio && $dataFim) {
@@ -456,11 +705,34 @@ class RelatorioController extends Controller
         $estoqueProdutosFiltrados = $estoqueProdutosFiltrados->get();
 
         // Verifica se a coleção está vazia
-        if ($produtosFiltrados->isEmpty()) {
+        if ($produtosFiltrados->isEmpty() && $estoqueProdutosFiltrados->isEmpty()) {
             return [
+                'baixaProdutos' => 'erro',
                 'produtosFiltrados' => 'erro',
                 'estoqueProdutosFiltrados' => 'erro',
+                'categoria' => 'erro',
+                'estoque' => 'erro',
                 'local' => 'erro',
+            ];
+        }
+
+        if ($defeito_descarte != null) {
+
+            // Filtra os produtos no estoque que possuem descartes com o defeito especificado
+            $estoqueProdutosFiltrados = EstoqueProduto::whereIn('produto_id', $produtosFiltradosIds)
+                ->whereHas('descartes', function ($query) use ($defeito_descarte) {
+                    $query->where('defeito_descarte', $defeito_descarte);
+                })
+                ->with(['descartes' => function ($query) use ($defeito_descarte) {
+                    $query->where('defeito_descarte', $defeito_descarte);
+                }])
+                ->get();
+
+            // Retorna os produtos filtrados e a categoria
+            return [
+                'produtosFiltrados' => $produtosFiltrados,
+                'estoqueProdutosFiltrados' => $estoqueProdutosFiltrados,
+                'local' => Local::with('estoques')->get(),
             ];
         }
 
@@ -476,7 +748,7 @@ class RelatorioController extends Controller
     /**
      * Filtragem de produtos de todos os estoques de todos os locais, com base na categoria especificada
      */
-    public function filtroRelatorioGeralPorCategoria($categoriaId, $dataInicio = null, $dataFim = null)
+    public function filtroRelatorioGeralPorCategoria($categoriaId, $dataInicio = null, $dataFim = null, $defeito_descarte)
     {
         // Recupera a categoria
         $categoria = Categoria::findOrFail($categoriaId);
@@ -493,7 +765,7 @@ class RelatorioController extends Controller
 
         // Realiza uma nova busca no estoque com base nos IDs dos produtos filtrados
         $estoqueProdutosFiltrados = EstoqueProduto::whereIn('produto_id', $produtosFiltradosIds)
-            ->where('quantidade_atual', '>', 0);
+            ->with('descartes');
 
         // Filtragem por validade, se as datas forem fornecidas
         if ($dataInicio && $dataFim) {
@@ -515,12 +787,36 @@ class RelatorioController extends Controller
 
         // Obtém os estoque produtos filtrados
         $estoqueProdutosFiltrados = $estoqueProdutosFiltrados->get();
+
         // Verifica se a coleção está vazia
-        if ($produtosFiltrados->isEmpty()) {
+        if ($produtosFiltrados->isEmpty() && $estoqueProdutosFiltrados->isEmpty()) {
             return [
+                'baixaProdutos' => 'erro',
                 'produtosFiltrados' => 'erro',
                 'estoqueProdutosFiltrados' => 'erro',
                 'categoria' => 'erro',
+                'estoque' => 'erro',
+                'local' => 'erro',
+            ];
+        }
+
+        if ($defeito_descarte != null) {
+
+            // Filtra os produtos no estoque que possuem descartes com o defeito especificado
+            $estoqueProdutosFiltrados = EstoqueProduto::whereIn('produto_id', $produtosFiltradosIds)
+                ->whereHas('descartes', function ($query) use ($defeito_descarte) {
+                    $query->where('defeito_descarte', $defeito_descarte);
+                })
+                ->with(['descartes' => function ($query) use ($defeito_descarte) {
+                    $query->where('defeito_descarte', $defeito_descarte);
+                }])
+                ->get();
+
+            // Retorna os produtos filtrados e a categoria
+            return [
+                'produtosFiltrados' => $produtosFiltrados,
+                'estoqueProdutosFiltrados' => $estoqueProdutosFiltrados,
+                'categoria' => $categoria,
             ];
         }
 

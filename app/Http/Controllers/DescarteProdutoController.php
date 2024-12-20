@@ -23,14 +23,18 @@ class DescarteProdutoController extends Controller
     {
 
         $categorias = Categoria::all();
-
+        $locals = Local::all();
+        $estoqueController = new EstoqueController();
+        $resultado = [];
         $valorTotalBaixaGeral = 0;
         $valorTotalEstoqueGeral = 0;
+        $filtroRelatorioCategoria = null;
+        $filtroRelatorioEstoque = null;
+        $filtroRelatorioLocal = null;
+        $filtroRelatorioPorLocalECategoria = null;
+        $filtroRelatorioGeral = null;
+        $filtroRelatorioGeralPorCategoria = null;
 
-
-        $resultado = [];
-        $estoqueController = new EstoqueController();
-        $locals = Local::all();
 
         foreach ($locals as $local) {
 
@@ -57,7 +61,7 @@ class DescarteProdutoController extends Controller
         $totalEstoqueGeralFormatado = number_format($valorTotalEstoqueGeral, 2, ',', '.');
 
         // Retorna a view com os dados
-        return view('baixas.index', compact('locals', 'categorias', 'resultado', 'totalBaixaGeralFormatado', 'totalEstoqueGeralFormatado'));
+        return view('baixas.index', compact('locals', 'categorias', 'resultado', 'totalBaixaGeralFormatado', 'totalEstoqueGeralFormatado', 'filtroRelatorioGeral', 'filtroRelatorioLocal' , 'filtroRelatorioGeralPorCategoria', 'filtroRelatorioPorLocalECategoria', 'filtroRelatorioEstoque', 'filtroRelatorioCategoria'));
     }
 
 
@@ -72,30 +76,30 @@ class DescarteProdutoController extends Controller
             $query->wherePivot('quantidade_atual', '>', 0)
                 ->withPivot('id', 'quantidade_atual', 'quantidade_minima', 'quantidade_maxima', 'validade');
         }])->findOrFail($estoqueId);
-    
+
         // Carregando os dados relacionados ao estoque
         $estoque_produto = EstoqueProduto::where("estoque_id", $estoqueId)->get();
         $estoqueProdutoIds = $estoque_produto->pluck('id');
         $produtosIds = $estoque_produto->pluck('produto_id');
         $produtos = Produto::whereIn('id', $produtosIds)->get();
-    
+
         // Carregando as baixas com o filtro de data, caso as datas sejam passadas
         $baixasQuery = DescarteProdutos::with('produto')
             ->whereIn('id_estoque_produto', $estoqueProdutoIds)
             ->orderBy('created_at', 'desc');
-    
+
         // Aplica o filtro de data se as datas de início e fim forem fornecidas
         if ($dataInicio && $dataFim) {
             $baixasQuery->whereBetween('updated_at', [$dataInicio, $dataFim]);
         }
-    
+
         $baixas = $baixasQuery->get();
-    
+
         // Mapeando os dados completos das baixas e produtos
         $dadosCompletos = $baixas->map(function ($baixa) use ($produtos, $estoque_produto) {
             $estoqueProduto = $estoque_produto->firstWhere('id', $baixa->id_estoque_produto);
             $produto = $produtos->firstWhere('id', $estoqueProduto->produto_id);
-    
+
             return [
                 'baixas' => [
                     'id' => $baixa->id,
@@ -110,7 +114,7 @@ class DescarteProdutoController extends Controller
                         : 'Sem validade',
                     'created_at' => $baixa->created_at->format('d/m/Y')
                 ],
-    
+
                 'produtos' => [
                     'id_produto' => $estoqueProduto->produto_id,
                     'preco_produto' => $produto ? $produto->preco : 0,
@@ -118,17 +122,17 @@ class DescarteProdutoController extends Controller
                 ]
             ];
         });
-    
+
         // Calculando o valor total das baixas
         $totalBaixas = $this->calcularValorTotal($dadosCompletos->toArray());
-    
+
         // Obtendo o id da escola
         $escola = $estoque['id'];
-    
+
         // Retornando a view com os dados
         return view('baixas.show', compact('dadosCompletos', 'estoque', 'totalBaixas', 'escola'));
     }
-    
+
 
     /**
      * Filtrar baixas do estoque

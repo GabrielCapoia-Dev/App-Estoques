@@ -10,22 +10,21 @@
                     <th>Categoria</th>
                     <th>Produto</th>
                     <th>Preço(un)</th>
-                    <th>Qtd Atual</th>
-                    <th>Qtd Mínima</th>
-                    <th>Qtd Máxima</th>
+                    <th>Qtd Descarte</th>
+                    <th>Motivo Descarte</th>
                     <th>Total</th>
                     <th>Validade</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach ($estoqueProdutosFiltrados as $estoqueProduto)
-                    @if ($estoqueProduto->quantidade_atual > 0)
+                    @foreach ($estoqueProduto->descartes as $descarte)
                         @php
                             // Converte o preço para float
                             $preco = (float) str_replace(',', '.', $estoqueProduto->produto->preco);
 
                             // Converte a quantidade atual para float
-                            $quantidade = (float) $estoqueProduto->quantidade_atual;
+                            $quantidade = (float) $descarte->quantidade_descarte;
 
                             // Calcula o total
                             $total = $preco * $quantidade;
@@ -37,17 +36,12 @@
                             <td>{{ $estoqueProduto->produto->nome_produto }}</td>
                             <td>R$ {{ number_format($preco, 2, ',', '.') }}</td>
                             <td>{{ number_format($quantidade, 0, ',', '.') }}</td>
-                            <td>
-                                {{ $estoqueProduto->quantidade_minima ?? 'N/A' }}
-                            </td>
-                            <td>
-                                {{ $estoqueProduto->quantidade_maxima ?? 'N/A' }}
-                            </td>
+                            <td>{{ $descarte->defeito_descarte }}</td>
                             <td>R$ {{ number_format($total, 2, ',', '.') }}</td>
                             <td>{{ $estoqueProduto->validade ? \Carbon\Carbon::parse($estoqueProduto->validade)->format('d-m-Y') : 'Sem validade' }}
                             </td>
                         </tr>
-                    @endif
+                    @endforeach
                 @endforeach
             </tbody>
         </table>

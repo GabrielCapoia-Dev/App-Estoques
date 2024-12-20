@@ -1,96 +1,5 @@
 @extends('layouts.index')
 
-<!-- Modal para Filtros e Download -->
-<div class="modal fade" id="modalDownload" tabindex="-1" aria-labelledby="modalDownloadLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content shadow">
-            <div class="modal-header bg-info text-white">
-                <h5 class="modal-title" id="modalDownloadLabel">Filtros para Download <i class="fa-solid fa-filter"></i>
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <!-- Formulário para enviar dados -->
-                <form id="formDownload" method="GET" action="{{ route('baixas.download') }}">
-                    @csrf
-
-                    <!-- Opções de formato -->
-                    <div class="mb-3">
-                        <label><input type="checkbox" name="formato[]" value="csv"> CSV</label>
-                        <label class="ms-3"><input type="checkbox" name="formato[]" value="pdf"> PDF</label>
-                    </div>
-
-                    <!-- Opções de escolas -->
-                    <div class="mb-3">
-                        <label><input type="checkbox" id="todos" name="todos"> Todas as Escolas</label>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="escolas" class="form-label">Escolha as Escolas</label>
-                        <select name="escolas[]" id="escolas" class="form-control">
-                            <option value="">Selecione as escolas</option>
-                            @foreach ($locals as $local)
-                                <option value="{{ $local->id }}">{{ $local->nome_local }}</option>
-                            @endforeach
-                        </select>
-                        @error('escolas')
-                            <small class="text-danger">{{ $message }}</small>
-                        @enderror
-                    </div>
-
-                    <!-- Filtro Categoria -->
-                    <div class="mb-4" id="categoria" style="display: none;">
-                        <label for="categoria-select" class="form-label">Categoria</label>
-                        <select class="form-select" id="categori-select" name="categoria-select">
-                            <option value="">Filtre por categoria</option>
-                            @foreach ($categorias as $categoria)
-                                <option value="{{ $categoria->id }}">{{ $categoria->nome_categoria }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    <!-- Filtro Descarte -->
-                    <div class="mb-4" id="motivoFiltro" style="display: none;">
-                        <label for="motivo-descarte" class="form-label">Motivo</label>
-                        <select class="form-select" id="motivo-descarte" name="motivo-descarte">
-                            <option value="">Filtre por motivo</option>
-                            <option value="Utilizado">Utilizado</option>
-                            <option value="Vencimento">Vencimento</option>
-                            <option value="Improprio para Consumo">Impróprio para consumo</option>
-                            <option value="Danificado">Danificado</option>
-                        </select>
-                    </div>
-
-                    <p class="fw-bold">Período</p>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="data-inicio" class="form-label">Início</label>
-                                <input type="date" class="form-control" id="data-inicio" name="data-inicio">
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="data-fim" class="form-label">Fim</label>
-                                <input type="date" class="form-control" id="data-fim" name="data-fim">
-                            </div>
-                        </div>
-                    </div>
-
-
-                    <!-- Botões de ação -->
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Baixar</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
-
-
 @section('content')
     <style>
         td:hover {
@@ -98,192 +7,274 @@
             /* Cor de fundo cinza ao passar o mouse */
         }
     </style>
+
     <div class="container mt-4">
-        <h1 class="text-center mb-4">Lista de Baixas</h1>
 
-        <!-- Cards de totais gerais -->
-        <div class="d-flex justify-content-between align-items-center mt-3">
+        <h1 class="h3">Lista de Baixas</h1>
 
-            <div>
-                <a href="#" data-bs-toggle="modal" data-bs-target="#modalDownload" class="btn btn-secondary">
-                    <i class="fa-solid fa-file-arrow-down"></i>
-                </a>
-            </div>
+        <div class="row">
 
+            <!-- Seção de filtros -->
+            <div class="col-md-12">
 
-            <!-- Card para valor total -->
-            <div class="card p-2"
-                style="min-width: 300px; display: flex; align-items: center; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
-                <div class="card-body p-0 d-flex justify-content-between w-100">
-                    <div class="text-muted" style="font-size: 0.8rem;">
-                        Total Estoque Geral:
+                <div class="card">
+
+                    <!-- Cards de totais gerais -->
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                        <div>
+                            <h5>Filtros para Relatórios de Baixas</h5>
+
+                        </div>
+
+                        {{-- <!-- Card para valor total -->
+                        <div class="card p-2"
+                            style="min-width: 300px; display: flex; align-items: center; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+                            <div class="card-body p-0 d-flex justify-content-between w-100">
+                                <div class="text-muted" style="font-size: 0.8rem;">
+                                    Total Estoque Geral:
+                                </div>
+                                <div class="text-success" style="font-size: 1rem; font-weight: bold;">
+                                    R$ {{ $totalEstoqueGeralFormatado }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card p-2"
+                            style="min-width: 300px; display: flex; align-items: center; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+                            <div class="card-body p-0 d-flex justify-content-between w-100">
+                                <div class="text-muted" style="font-size: 0.8rem;">
+                                    Total Baixa Geral:
+                                </div>
+                                <div class="text-danger" style="font-size: 1rem; font-weight: bold;">
+                                    -R$ {{ $totalBaixaGeralFormatado }}
+                                </div>
+                            </div>
+                        </div> --}}
+
                     </div>
-                    <div class="text-success" style="font-size: 1rem; font-weight: bold;">
-                        R$ {{ $totalEstoqueGeralFormatado }}
+
+                    <div class="card-body">
+                        <form method="GET" action="{{ route('relatorios.filtroRelatorio') }}" id="relatorioForm">
+
+
+                            <div class="row">
+                                <!-- Filtro por local -->
+                                <div class="col-md-4">
+                                    <label for="local" class="form-label">Local</label>
+                                    <select id="local" name="local" class="form-select">
+                                        <option value="">Selecione</option>
+                                        @foreach ($locals as $local)
+                                            <option value="{{ $local->id }}">{{ $local->nome_local }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="col-md-2">
+                                    <label for="estoque" class="form-label">Estoque</label>
+                                    <select id="estoque" name="estoque" class="form-select">
+                                        <option value="">Selecione</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label for="defeito_descarte" class="form-label">Motivo Descarte</label>
+                                    <select class="form-select" id="defeito_descarte" name="defeito_descarte">
+                                        <option value="">Filtre por motivo</option>
+                                        <option value="Utilizado">Utilizado</option>
+                                        <option value="Vencimento">Vencimento</option>
+                                        <option value="Improprio para Consumo">Impróprio para consumo</option>
+                                        <option value="Danificado">Danificado</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-2">
+                                    <label for="categoria-select" class="form-label">Categoria</label>
+                                    <select id="categoria" name="categoria" class="form-select">
+                                        <option value="">Selecione</option>
+                                        @foreach ($categorias as $categoria)
+                                            <option value="{{ $categoria->id }}">{{ $categoria->nome_categoria }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="row align-items-end">
+                                <!-- Filtro por período -->
+                                <div class="col-md-2">
+                                    <label for="dataInicio" class="form-label">Data Início</label>
+                                    <input type="date" id="dataInicio" name="dataInicio" class="form-control">
+                                </div>
+                                <div class="col-md-2">
+                                    <label for="dataFim" class="form-label">Data Fim</label>
+                                    <input type="date" id="dataFim" name="dataFim" class="form-control">
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="formato" class="form-label">Formato</label>
+                                    <select id="formato" name="formato" class="form-select">
+                                        <option value="">Selecione</option>
+                                        <option value="csv">CSV</option>
+                                        <option value="pdf">PDF</option>
+                                    </select>
+                                </div>
+
+                                <input type="hidden" name="baixa" value="true">
+
+
+                        </form>
+
+
+                        <div class="col-md-2">
+                            <label class="form-label d-block">&nbsp;</label>
+                            <button type="button" class="btn btn-secondary w-100" id="baixarBtn">Baixar</button>
+                        </div>
+
+                        <div class="col-md-2">
+                            <label class="form-label d-block">&nbsp;</label>
+                            <button type="button" class="btn btn-primary w-100" id="filtrarBtn">Filtrar</button>
+                        </div>
                     </div>
+                    </form>
                 </div>
             </div>
-
-            <div class="card p-2"
-                style="min-width: 300px; display: flex; align-items: center; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
-                <div class="card-body p-0 d-flex justify-content-between w-100">
-                    <div class="text-muted" style="font-size: 0.8rem;">
-                        Total Baixa Geral:
-                    </div>
-                    <div class="text-danger" style="font-size: 1rem; font-weight: bold;">
-                        -R$ {{ $totalBaixaGeralFormatado }}
-                    </div>
-                </div>
-            </div>
-
         </div>
+    </div>
 
-        <br>
+    <br>
 
-        <!-- Tabela para exibir os resultados -->
-        <table class="table table-striped mt-3">
-            <thead>
-                <tr>
-                    <th>Local</th>
-                    <th>Valor Total Estoque</th>
-                    <th>Valor Total Baixa</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach ($resultado as $result)
-                    <tr>
-                        <td style="transition: background-color 0.3s;">
-                            <a href="{{ route('estoques.index', $result['idLocal']) }}"
-                                style="display: block; text-decoration: none; color: black; padding: 4px;">
-                                {{ $result['local'] }}
-                            </a>
-                        </td>
 
-                        <td class="text-success">R$ {{ number_format($result['valorTotalEstoque'], 2, ',', '.') }}</td>
-                        <td class="text-danger">-R$ {{ number_format($result['valorTotalBaixa'], 2, ',', '.') }}</td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
+    <div class="row">
+        <!-- Seção de filtros -->
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5>Lista dos itens filtrados</h5>
+                </div>
+                <div class="card-body">
+
+                    @if ($filtroRelatorioCategoria != null)
+                        @include('layouts.baixas.filtroRelatorioBaixasCategoria', [
+                            'produtosFiltrados' => $produtosFiltrados,
+                            'estoqueProdutosFiltrados' => $estoqueProdutosFiltrados,
+                            'categoriaProdutosFiltrados' => $categoriaProdutosFiltrados,
+                            'estoque' => $estoque,
+                            'escola' => $escola,
+                        ])
+                    @elseif ($filtroRelatorioEstoque != null)
+                        @include('layouts.baixas.filtroRelatorioBaixasEstoque', [
+                            'produtosFiltrados' => $produtosFiltrados,
+                            'estoqueProdutosFiltrados' => $estoqueProdutosFiltrados,
+                            'estoque' => $estoque,
+                            'escola' => $escola,
+                        ])
+                    @elseif ($filtroRelatorioLocal != null)
+                        @include('layouts.baixas.filtroRelatorioBaixasLocal', [
+                            'produtosFiltrados' => $produtosFiltrados,
+                            'estoqueProdutosFiltrados' => $estoqueProdutosFiltrados,
+                            'estoque' => $estoque,
+                            'escola' => $escola,
+                        ])
+                    @elseif ($filtroRelatorioPorLocalECategoria != null)
+                        @include('layouts.baixas.filtroRelatorioBaixasPorLocalECategoria', [
+                            'produtosFiltrados' => $produtosFiltrados,
+                            'estoqueProdutosFiltrados' => $estoqueProdutosFiltrados,
+                            'estoque' => $estoque,
+                            'escola' => $escola,
+                        ])
+                    @elseif ($filtroRelatorioGeral != null)
+                        @include('layouts.baixas.filtroRelatorioBaixasGeral', [
+                            'produtosFiltrados' => $produtosFiltrados,
+                            'estoqueProdutosFiltrados' => $estoqueProdutosFiltrados,
+                            'escola' => $escola,
+                        ])
+                    @elseif ($filtroRelatorioGeralPorCategoria != null)
+                        @include('layouts.baixas.filtroRelatorioBaixasGeralPorCategoria', [
+                            'produtosFiltrados' => $produtosFiltrados,
+                            'estoqueProdutosFiltrados' => $estoqueProdutosFiltrados,
+                            'categoria' => $categoria,
+                        ])
+                    @else
+                        <p>Por favor, aplique os filtros para visualizar os resultados.</p>
+                    @endif
+
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     </div>
 @endsection
 
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const form = document.getElementById('formDownload');
+        // Captura os botões
+        const form = document.getElementById('relatorioForm');
+        const baixarBtn = document.getElementById('baixarBtn');
+        const filtrarBtn = document.getElementById('filtrarBtn');
 
-        form.addEventListener('submit', function(event) {
-            // Seleciona os checkboxes de formato
-            const checkboxes = document.querySelectorAll('input[name="formato[]"]');
+        // Função para atualizar a ação do formulário com base no botão clicado
+        function setActionAndSubmit(route) {
+            form.action = route;
+            form.submit();
+        }
 
-            // Verifica se pelo menos um checkbox está marcado
-            const isAnyChecked = Array.from(checkboxes).some(checkbox => checkbox.checked);
-
-            if (!isAnyChecked) {
-                event.preventDefault(); // Impede o envio do formulário
-                alert('Por favor, selecione pelo menos um formato de download (CSV ou PDF).');
+        // Evento para o botão "Baixar"
+        baixarBtn.addEventListener('click', function() {
+            const formato = document.getElementById('formato').value;
+            if (!formato) {
+                alert('Por favor, selecione um formato para baixar.');
+                return;
             }
+            if (formato === 'pdf') {
+                alert('Em breve, essa opção estara disponivel.');
+                return;
+            }
+            setActionAndSubmit('{{ route('relatorios.download.baixas') }}');
+        });
+
+        // Evento para o botão "Filtrar"
+        filtrarBtn.addEventListener('click', function() {
+            setActionAndSubmit('{{ route('relatorios.filtroRelatorio') }}');
         });
     });
 </script>
 
-
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const form = document.getElementById('formDownload');
-        const checkboxTodos = document.getElementById('todos');
-        const selectEscolas = document.getElementById('escolas');
-        const motivoFiltro = document.getElementById('motivoFiltro');
-        const categoria = document.getElementById('categoria');
+        // Evento de mudança para o select de local
+        document.getElementById('local').addEventListener('change', function() {
+            const localId = this.value;
+            const estoqueSelect = document.getElementById('estoque');
 
-        // Sincronização entre checkbox "Todas as Escolas" e select
-        checkboxTodos.addEventListener('change', function() {
-            if (this.checked) {
-                selectEscolas.value = ''; // Limpa a seleção do select
-                motivoFiltro.style.display = 'none'; // Oculta o filtro por motivo
-                categoria.style.display = 'none'; // Oculta o filtro por motivo
-            } else {
-                if (selectEscolas.value !== '') {
-                    motivoFiltro.style.display =
-                    'block'; // Exibe o filtro por motivo se uma escola estiver selecionada
-                    categoria.style.display =
-                    'block'; // Exibe o filtro por motivo se uma escola estiver selecionada
-                }
+            // Limpa os estoques existentes
+            estoqueSelect.innerHTML = '<option value="">Selecione</option>';
+
+            if (localId) {
+
+                const url = `/escolas/${localId}/estoques/getEstoques`;
+
+                // Faz a requisição para a rota que retorna os estoques
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Adiciona os novos <option> para os estoques
+                            data.estoques.forEach(estoque => {
+                                const option = document.createElement('option');
+                                option.value = estoque.id;
+                                option.textContent = estoque.nome_estoque;
+                                estoqueSelect.appendChild(option);
+                            });
+                        } else {
+                            console.error('Erro ao carregar estoques:', data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro ao carregar estoques:', error);
+                    });
             }
-        });
-
-        selectEscolas.addEventListener('change', function() {
-            if (this.value) {
-                checkboxTodos.checked = false; // Desmarca o checkbox "Todas as Escolas"
-                motivoFiltro.style.display = 'block'; // Exibe o filtro por motivo
-                categoria.style.display = 'block'; // Exibe o filtro por motivo
-            } else {
-                motivoFiltro.style.display =
-                'none'; // Oculta o filtro por motivo se nenhuma escola for selecionada
-                categoria.style.display =
-                'none'; // Oculta o filtro por motivo se nenhuma escola for selecionada
-            }
-        });
-
-        form.addEventListener('submit', function(event) {
-            // Validação dos formatos
-            const checkboxesFormatos = document.querySelectorAll('input[name="formato[]"]');
-            const isAnyFormatoChecked = Array.from(checkboxesFormatos).some(checkbox => checkbox
-                .checked);
-
-            if (!isAnyFormatoChecked) {
-                event.preventDefault();
-                alert('Por favor, selecione pelo menos um formato de download (CSV ou PDF).');
-                return;
-            }
-
-            // Validação das escolas
-            const isTodosChecked = checkboxTodos.checked;
-            const isEscolaSelected = selectEscolas.value !== '';
-
-            if (!isTodosChecked && !isEscolaSelected) {
-                event.preventDefault();
-                alert('Por favor, selecione "Todas as Escolas" ou uma escola específica.');
-                return;
-            }
-        });
-    });
-</script>
-
-
-
-<script>
-    document.getElementById('btnDownload').addEventListener('click', function() {
-        var formData = new FormData();
-        var formatos = [];
-        document.querySelectorAll('input[name="formato[]"]:checked').forEach(function(input) {
-            formatos.push(input.value);
-        });
-
-        formData.append('formato', formatos);
-        formData.append('todos', document.getElementById('todos').checked ? 1 : 0);
-        document.querySelectorAll('select[name="escolas[]"]:checked').forEach(function(input) {
-            formData.append('escolas[]', input.value);
-        });
-
-        // Enviar via AJAX para download
-        fetch("{{ route('baixas.download') }}", {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute(
-                    'content')
-            },
-            body: formData
-        }).then(function(response) {
-            return response.blob();
-        }).then(function(blob) {
-            var link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = "relatorio_baixas.csv"; // Ajuste de nome de arquivo conforme o tipo
-            link.click();
-        }).catch(function(error) {
-            console.log('Erro ao baixar o arquivo:', error);
         });
     });
 </script>

@@ -63,12 +63,12 @@
                     <thead>
                         <tr>
                             <th>#</th>
-                            <th>Local</th>
-                            <th>Pedido</th>
-                            <th>Valor($)</th>
-                            <th>Data Prevista</th>
-                            <th>Status</th>
-                            <th>Ações</th>
+                            <th class="col-md-2">Local</th>
+                            <th class="col-md-2">Pedido</th>
+                            <th class="col-md-2">Valor($)</th>
+                            <th class="col-md-2">Data Prevista</th>
+                            <th class="col-md-2">Status</th>
+                            <th class="col-md-2">Ações</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -81,7 +81,7 @@
                             <td>2025-01-16</td>
                             <td>Pendente</td>
                             <td>
-                                <button class="btn btn-sm btn-primary"><i class="fa-solid fa-eye"></i></button>
+                                <button class="btn btn-sm btn-info"><i class="fa-regular fa-eye"></i></button>
                                 <button class="btn btn-sm btn-warning"><i class="fa-solid fa-pen-to-square"></i></button>
                                 <button class="btn btn-sm btn-danger"><i class="fa-solid fa-ban"></i></button>
                             </td>
@@ -94,7 +94,7 @@
                             <td>2024-12-15</td>
                             <td>Concluído</td>
                             <td>
-                                <button class="btn btn-sm btn-primary"><i class="fa-solid fa-eye"></i></button>
+                                <button class="btn btn-sm btn-info"><i class="fa-regular fa-eye"></i></button>
                             </td>
                         </tr>
                     </tbody>

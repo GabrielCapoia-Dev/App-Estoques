@@ -19,6 +19,8 @@
             </thead>
             <tbody>
                 @foreach ($estoqueProdutosFiltrados as $estoqueProduto)
+                @if ($estoqueProduto->quantidade_atual > 0)
+
                     @php
                         // Converte o preço para float
                         $preco = (float) str_replace(',', '.', $estoqueProduto->produto->preco);
@@ -47,6 +49,7 @@
                         <td>{{ $estoqueProduto->validade ? \Carbon\Carbon::parse($estoqueProduto->validade)->format('d-m-Y') : 'Sem validade' }}
                         </td>
                     </tr>
+                    @endif
                 @endforeach
             </tbody>
         </table>
