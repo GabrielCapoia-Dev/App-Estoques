@@ -234,7 +234,7 @@ class DownloadController extends Controller
         }
 
         // Obter todos os estoques da escola
-        $estoqueEscola = Local::findOrFail($idEstoque);
+        $estoqueEscola = Estoque::findOrFail($idEstoque);
 
         $escola = Local::findOrFail($idEscola);
 
@@ -278,6 +278,7 @@ class DownloadController extends Controller
 
             // Somar aos totais
             $totalEstoqueGeral += $precoProduto * $quantidadeDescarte;
+
 
             // Adicionar a linha para o CSV
             $csvContent .= implode(';', [

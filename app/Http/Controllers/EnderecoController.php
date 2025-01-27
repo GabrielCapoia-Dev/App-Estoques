@@ -13,6 +13,7 @@ class EnderecoController extends Controller
     /**
      * O endereço deve ser static pois quando o local é criado o endereço também deve ser criado junto
      */
+    
     public static function store(Request $request)
     {
 

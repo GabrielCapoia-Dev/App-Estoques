@@ -13,21 +13,10 @@ return new class extends Migration
     {
         Schema::create('pedidos', function (Blueprint $table) {
             $table->id();
-
-            // Relacionamento com a tabela 'locals'
-            $table->foreignId('id_local')
-                ->constrained('locals')
-                ->onDelete('cascade');
-
-            // Relacionamento com a tabela 'estoque_produto_pedido'
-            $table->foreignId('estoque_produto_pedido_id')
-                ->constrained('estoque_produto_pedido')
-                ->onDelete('cascade');
-
+            $table->foreignId('id_local')->constrained('locals')->onDelete('cascade');
             $table->timestamps();
         });
     }
-
 
     /**
      * Reverse the migrations.
