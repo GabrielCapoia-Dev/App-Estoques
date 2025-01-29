@@ -1,5 +1,103 @@
 @extends('layouts.index')
 
+<!-- Modal de Cadastro de Produto -->
+<div class="modal fade" id="produtoModal" tabindex="-1" aria-labelledby="produtoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="produtoModalLabel">Cadastrar Novo Produto</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+
+                <form action="#" method="POST">
+                    @csrf
+
+                    <div class="row">
+                        <div class="form-group col-md-6">
+                            <label for="local_id" class="form-label">Local</label>
+                            <select name="local_id" id="local_id" class="form-control" required>
+                                <option value="">Selecione um local</option>
+                                @foreach ($locals as $local)
+                                    <option value="{{ $local->id }}">{{ $local->nome_local }}</option>
+                                @endforeach
+                            </select>
+                            @error('local_id')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                        </div>
+
+                        <div class="form-group col-md-6">
+                            <label for="estoqueModal" class="form-label">Estoque</label>
+                            <select id="estoqueModal" name="estoqueModal" class="form-select">
+                                <option value="">Selecione</option>
+                            </select>
+                        </div>
+
+                    </div>
+
+                    <div class="row">
+                        <div class="form-group col-md-8">
+                            <label for="produto_id" class="form-label">Produto</label>
+                            <select name="produto_id" id="produto_id" class="form-control" required>
+                                <option value="">Selecione um produto</option>
+                            </select>
+                            @error('produto_id')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                        </div>
+
+                        <div class="form-group col-md-4">
+                            <label for="validade" class="form-label">Validade</label>
+                            <input type="date" name="validade" id="validade" class="form-control"
+                                value="{{ old('validade') }}">
+                            @error('validade')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="form-group col-md-4">
+                            <label for="quantidade_atual" class="form-label">Quantidade Atual</label>
+                            <input type="number" name="quantidade_atual" id="quantidade_atual" class="form-control"
+                                value="{{ old('quantidade_atual') }}" required>
+                            @error('quantidade_atual')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                        </div>
+
+                        <div class="form-group col-md-4">
+                            <label for="quantidade_minima" class="form-label">Qtd. Mínima</label>
+                            <input type="number" name="quantidade_minima" id="quantidade_minima" class="form-control"
+                                value="{{ old('quantidade_minima') }}" required readonly>
+                            @error('quantidade_minima')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                        </div>
+
+                        <div class="form-group col-md-4">
+                            <label for="quantidade_maxima" class="form-label">Qtd. Máxima</label>
+                            <input type="number" name="quantidade_maxima" id="quantidade_maxima" class="form-control"
+                                value="{{ old('quantidade_maxima') }}" required readonly>
+                            @error('quantidade_maxima')
+                                <small class="text-danger">{{ $message }}</small>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <br>
+                    <button type="submit" class="btn btn-success"><i class="fa-regular fa-floppy-disk"></i>
+                        Salvar
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
 @section('content')
     <div class="container">
         <h1 class="h3">Cadastro de Pedido</h1>
@@ -51,7 +149,11 @@
                             <strong>Valor Total:</strong>
                             <span id="totalGeral" class="ms-3">R$ 0,00</span>
                             <button type="button" class="btn btn-primary ms-3" id="fazerPedidoBtn">Finalizar</button>
-                            <button type="button" class="btn ms-3" style="background-color: #11bb69; color: white" id="fazerPedidoBtn"><i class="fa-solid fa-plus"></i> Produto</button>
+                            <button type="button" class="btn ms-3" style="background-color: #11bb69; color: white"
+                                id="abrirProdutoModal">
+                                <i class="fa-solid fa-plus"></i> Produto
+                            </button>
+
                         </div>
                     </div>
                     <div class="card-body">
@@ -307,4 +409,103 @@
         // Atualiza o total geral após a mudança
         atualizarTotalGeral();
     }
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Atualizar o total geral ao carregar a página
+        atualizarTotalGeral();
+
+        // Evento de mudança para o select de local
+        document.getElementById('local').addEventListener('change', function() {
+            const localId = this.value;
+            const estoqueSelect = document.getElementById('estoqueModal');
+
+            // Limpa os estoques existentes
+            estoqueSelect.innerHTML = '<option value="">Selecione</option>';
+
+            if (localId) {
+
+                const url = `/escolas/${localId}/estoques/getEstoques`;
+
+                // Faz a requisição para a rota que retorna os estoques
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Adiciona os novos <option> para os estoques
+                            data.estoques.forEach(estoque => {
+                                const option = document.createElement('option');
+                                option.value = estoque.id;
+                                option.textContent = estoque.nome_estoque;
+                                estoqueSelect.appendChild(option);
+                            });
+                        } else {
+                            console.error('Erro ao carregar estoques:', data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro ao carregar estoques:', error);
+                    });
+            }
+        });
+
+        // Verifica se já existem valores totais ao carregar a lista de itens
+        if (document.querySelectorAll('[id^="total_"]').length > 0) {
+            atualizarTotalGeral(); // Atualiza o total geral ao carregar os itens
+        }
+
+        // Captura o botão e adiciona evento de clique para abrir o modal
+        document.getElementById("abrirProdutoModal").addEventListener("click", function() {
+            var produtoModal = new bootstrap.Modal(document.getElementById("produtoModal"));
+            produtoModal.show();
+        });
+
+        const produtoSelect = document.getElementById('produto_id');
+        const quantidadeMinima = document.getElementById('quantidade_minima');
+        const quantidadeMaxima = document.getElementById('quantidade_maxima');
+
+        // Limpar os campos de quantidade mínima e máxima quando o formulário carregar
+        quantidadeMinima.value = '';
+        quantidadeMaxima.value = '';
+
+        // Tornar os campos apenas leitura (readonly)
+        quantidadeMinima.readOnly = true;
+        quantidadeMaxima.readOnly = true;
+        quantidadeMinima.style.backgroundColor = '#C0C0C0';
+        quantidadeMaxima.style.backgroundColor = '#C0C0C0';
+
+        // Dados de quantidades mínimas e máximas dos produtos no estoque
+
+
+        // Preencher campos com dados do banco quando um produto for selecionado
+        produtoSelect.addEventListener('change', function() {
+            const produtoId = produtoSelect.value;
+
+            // if (produtoId && produtosEstoque[produtoId]) {
+            //     // Se o produto for encontrado no estoque, preenche as quantidades
+            //     const produtoEstoque = produtosEstoque[produtoId];
+            //     quantidadeMinima.value = produtoEstoque.quantidade_minima;
+            //     quantidadeMaxima.value = produtoEstoque.quantidade_maxima;
+
+            //     // Tornar os campos apenas leitura (readonly)
+            //     quantidadeMinima.readOnly = true;
+            //     quantidadeMaxima.readOnly = true;
+
+            //     // Estilizar os campos para indicar que estão desabilitados
+            //     quantidadeMinima.style.backgroundColor = '#f0f0f0';
+            //     quantidadeMaxima.style.backgroundColor = '#f0f0f0';
+            // } else {
+            //     // Caso não tenha o produto, limpa os campos e torna-os editáveis
+            //     quantidadeMinima.value = '';
+            //     quantidadeMaxima.value = '';
+            //     quantidadeMinima.readOnly = false;
+            //     quantidadeMaxima.readOnly = false;
+
+            //     // Restaurar a cor de fundo para editáveis
+            //     quantidadeMinima.style.backgroundColor = '';
+            //     quantidadeMaxima.style.backgroundColor = '';
+            // }
+        });
+    });
 </script>

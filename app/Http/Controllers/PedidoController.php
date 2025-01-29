@@ -130,7 +130,7 @@ class PedidoController extends Controller
 
 
         if ($localId == null && $estoqueId == null) {
-            $filtro = $this->filtrarPedidosGeral($estoqueId);
+            $filtro = null;
         }
         if ($localId != null && $estoqueId == null) {
             $filtro = $this->filtrarPedidosLocal($localId);
@@ -141,8 +141,6 @@ class PedidoController extends Controller
 
         return view('pedidos.create',  compact('locals', 'estoques', 'produtos', 'filtro'));
     }
-
-    public function filtrarPedidosGeral($estoqueId) {}
 
     public function filtrarPedidosLocal($localId)
     {
@@ -193,55 +191,46 @@ class PedidoController extends Controller
         ];
     }
 
-
     public function filtrarPedidosEstoque($estoqueId)
     {
+        // Recupera o estoque
         $estoque = Estoque::findOrFail($estoqueId);
 
-        $query = Produto::whereHas('estoques', function ($query) use ($estoque) {
-            $query->where('estoque_id', $estoque->id);
-        })->with('categoria');
-
-        $produtosFiltrados = $query->get();
-
-        $produtosFiltradosIds = $produtosFiltrados->pluck('id')->toArray();
-
-        $estoqueProdutosFiltrados = EstoqueProduto::whereIn('produto_id', $produtosFiltradosIds)
-            ->where('estoque_id', $estoque->id)
-            ->with('descartes')
-            ->with('estoque')
-            ->with('produto')
+        // Recupera os produtos no estoque específico
+        $estoqueProdutosFiltrados = EstoqueProduto::where('estoque_id', $estoque->id)
+            ->with('produto', 'estoque')
             ->get();
 
-        $produtosAbaixoQuantidadeMinima = [];
-
+        // Agrupa os produtos por ID e calcula a quantidade total no estoque
         $estoqueProdutosAgrupados = $estoqueProdutosFiltrados->groupBy('produto_id')->map(function ($produtos) {
             $produtoRelacionado = $produtos->first()->produto;
             $estoqueRelacionado = $produtos->first()->estoque;
             $localRelacionado = Local::find($estoqueRelacionado->id_local);
+            $somaQuantidade = $produtos->sum('quantidade_atual');
+            $quantidade_minima = (int) $produtos->first()->quantidade_minima;
+            $quantidade_maxima = (int) $produtos->first()->quantidade_maxima;
+
+            $quantidadeDiferenca = $quantidade_maxima - $somaQuantidade;
 
             return [
-                'quantidade_atual' => $produtos->sum('quantidade_atual'),
-                'quantidade_minima' => (int) $produtos->first()->quantidade_minima,
-                'quantidade_maxima' => (int) $produtos->first()->quantidade_maxima,
+                'quantidade_diferenca' => $quantidadeDiferenca,
+                'quantidade_atual' => $somaQuantidade,
+                'quantidade_minima' => $quantidade_minima,
+                'quantidade_maxima' => $quantidade_maxima,
                 'produto' => json_decode($produtoRelacionado, JSON_OBJECT_AS_ARRAY),
                 'estoque' => json_decode($estoqueRelacionado, JSON_OBJECT_AS_ARRAY),
                 'local' => json_decode($localRelacionado, JSON_OBJECT_AS_ARRAY),
             ];
         });
 
+        // Filtra os produtos abaixo da quantidade mínima
+        $produtosAbaixoQuantidadeMinima = $estoqueProdutosAgrupados->filter(function ($produto) {
+            return $produto['quantidade_atual'] <= $produto['quantidade_minima'];
+        });
 
-        foreach ($estoqueProdutosAgrupados as $produtoAgrupado) {
-
-            $quantidade_minima = $produtoAgrupado['quantidade_minima'];
-            $quantidade_atual = $produtoAgrupado['quantidade_atual'];
-
-            if ($quantidade_atual <= $quantidade_minima) {
-
-                $produtosAbaixoQuantidadeMinima[] = $produtoAgrupado;
-            }
-        }
-
-        return ($produtosAbaixoQuantidadeMinima);
+        // Retorna os resultados
+        return [
+            'produtos_abaixo_quantidade_minima' => $produtosAbaixoQuantidadeMinima->values(),
+        ];
     }
 }
